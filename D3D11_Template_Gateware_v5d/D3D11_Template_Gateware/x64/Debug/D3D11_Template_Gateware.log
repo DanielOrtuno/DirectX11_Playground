@@ -1,0 +1,36 @@
+﻿  GAudio.cpp
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_audio\gaudiowin.hpp(2): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_audio\gaudiowin.hpp(765): warning C4101: 'e': unreferenced local variable
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_audio\gaudiowin.hpp(839): warning C4101: 'e': unreferenced local variable
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_audio\gaudiowin.hpp(1152): warning C4101: 'e': unreferenced local variable
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_audio\gaudiowin.hpp(1227): warning C4101: 'e': unreferenced local variable
+  GDirectX11Surface.cpp
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_graphics\gdirectx11surface.cpp(214): warning C4244: '=': conversion from 'unsigned int' to 'FLOAT', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_graphics\gdirectx11surface.cpp(215): warning C4244: '=': conversion from 'unsigned int' to 'FLOAT', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_graphics\gdirectx11surface.cpp(426): warning C4244: '=': conversion from 'unsigned int' to 'FLOAT', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_graphics\gdirectx11surface.cpp(427): warning C4244: '=': conversion from 'unsigned int' to 'FLOAT', possible loss of data
+  GOpenGLSurface.cpp
+  GMatrix.cpp
+  GQuaternion.cpp
+  GVector.cpp
+  GBI_Callback.cpp
+  GBufferedInput.cpp
+  GFile.cpp
+  GInput.cpp
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\gi_callback.cpp(163): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\gi_callback.cpp(164): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\ginput.cpp(356): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\ginput.cpp(357): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\ginput.cpp(369): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\ginput.cpp(370): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  GI_Callback.cpp
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\gi_callback.cpp(163): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_system\gi_callback.cpp(164): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  GI_Static.cpp
+  GLog.cpp
+  GWindow.cpp
+  main.cpp
+  Mesh.cpp
+  Generating Code...
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gateware redistribution r5d\source\g_audio\gaudiowin.hpp(1425): warning C4715: 'WindowAppMusic::Stream': not all control paths return a value
+  D3D11_Template_Gateware.vcxproj -> C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\x64\Debug\D3D11_Template_Gateware.exe

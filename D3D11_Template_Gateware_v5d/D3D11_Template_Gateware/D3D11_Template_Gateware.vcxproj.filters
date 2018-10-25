@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_Audio\GAudio.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_Graphics\GDirectX11Surface.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_Graphics\GOpenGLSurface.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_Math\GMatrix.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_Math\GQuaternion.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_Math\GVector.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GBI_Callback.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GBufferedInput.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GFile.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GI_Callback.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GI_Static.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GInput.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GLog.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Gateware Redistribution R5d\Source\G_System\GWindow.cpp">
+      <Filter>Gateware Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Camera.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LetsDrawSomeStuff.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Defines.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Gateware Source">
+      <UniqueIdentifier>{b6c72e31-647e-44cd-a60d-0b316676c04d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="BasicVertexShader.hlsl" />
+    <FxCompile Include="BasicPixelShader.hlsl" />
+  </ItemGroup>
+</Project>
