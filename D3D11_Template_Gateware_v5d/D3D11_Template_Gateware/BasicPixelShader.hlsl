@@ -4,7 +4,7 @@ struct OUTPUT
 	float4 color : OCOLOR;
 };
 
-float4 main() : SV_TARGET
+float4 main(OUTPUT input) : SV_TARGET
 {
-	return float4(1,0,0,1);
+	return input.color;
 }

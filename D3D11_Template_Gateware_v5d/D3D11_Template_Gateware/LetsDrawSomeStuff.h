@@ -114,9 +114,7 @@ void LetsDrawSomeStuff::Render()
 			const float d_green[] = { 0, 0.5f, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
-			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!\
-
-	
+			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
 			triangle.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
 			// Present Backbuffer using Swapchain object

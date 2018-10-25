@@ -8,7 +8,7 @@ struct VERTEX
 struct OUTPUT
 {
 	float4 pos : SV_POSITION;
-
+	float4 color : OCOLOR;
 };
 
 OUTPUT main(VERTEX input)
@@ -16,6 +16,7 @@ OUTPUT main(VERTEX input)
 	OUTPUT output = (OUTPUT)0;
 
 	output.pos = input.pos;
+	output.color = input.color;
 
 	return output;
 }
