@@ -1,12 +1,9 @@
 #include "Mesh.h"
 
-
-
 Mesh::Mesh()
 {
 	m_pVertexBuffer.p = nullptr;
 	m_pIndexBuffer.p = nullptr;
-	m_pConstantBuffer = nullptr;
 	m_pVertices = nullptr;
 	m_pIndices = nullptr;
 
@@ -14,51 +11,39 @@ Mesh::Mesh()
 	mNumIndices = 0;
 }
 
+
 void Mesh::MakeTriangle(ID3D11Device* device)
 {
 	// Load data into arrays
-	mNumVertices = 3;
+	mNumVertices = 4;
 	m_pVertices = new VERTEX[mNumVertices];
 
-	m_pVertices[0] = { XMFLOAT4(0, .5f, 0, 1),	XMFLOAT4(1,0,0,1) };
-	m_pVertices[1] = { XMFLOAT4(.5f, -.5f, 0, 1),	XMFLOAT4(1,0,0,1) };
-	m_pVertices[2] = { XMFLOAT4(-.5, -.5f, 0, 1),		XMFLOAT4(1,0,0,1) };
-
-	//m_pVertices[0] = { XMFLOAT4(-.5f, -.5f, 0, 1),	XMFLOAT4(1,1,1,1) };
-	//m_pVertices[1] = { XMFLOAT4(.5f, -.5f, 0, 1),	XMFLOAT4(1,1,1,1) };
-	//m_pVertices[2] = { XMFLOAT4(.5f, -.5f, .5f, 1), XMFLOAT4(1,1,1,1) };
-	//m_pVertices[3] = { XMFLOAT4(-.5f, -.5f, .5f, 1),XMFLOAT4(1,1,1,1) };
-	//m_pVertices[4] = { XMFLOAT4(0, 0, .25f, 1),		XMFLOAT4(1,1,1,1) };
+	m_pVertices[0] = { XMFLOAT4(0, .5f, .25f, 1),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[1] = { XMFLOAT4(.5, -.5f, 0, 1),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[2] = { XMFLOAT4(-.5f, -.5f, 0, 1),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[3] = { XMFLOAT4(0, -.5f, .5f, 1),	XMFLOAT4(1,0,0,1) };
 
 
-	mNumIndices = 6;
+
+	mNumIndices = 12;
 	m_pIndices = new int[mNumIndices];
 
-	m_pIndices[0] = 0;
+	m_pIndices[0] = 0;	//Front face
 	m_pIndices[1] = 1;
-	m_pIndices[2] = 1;
-	m_pIndices[3] = 2;
-	m_pIndices[4] = 2;
-	m_pIndices[5] = 0;
+	m_pIndices[2] = 2;
 
-	//base
-	//m_pIndices[0] = 0;
-	//m_pIndices[1] = 1;
-	//m_pIndices[2] = 1;
-	//m_pIndices[3] = 2;
-	//m_pIndices[4] = 2;
-	//m_pIndices[5] = 3;
-	//m_pIndices[6] = 3;
-	//m_pIndices[7] = 0;
-	//
-	//m_pIndices[8] = 0;
-	//m_pIndices[9] = 4;
-	//m_pIndices[10] = 1;
-	//m_pIndices[11] = 4;
-	//m_pIndices[12] = 2;
-	//m_pIndices[13] = 4;
-	//m_pIndices[14] = 3;
-	//m_pIndices[15] = 4;
+	m_pIndices[3] = 0;	//Left face
+	m_pIndices[4] = 2;
+	m_pIndices[5] = 3;
+
+	m_pIndices[6] = 0;	//Right face
+	m_pIndices[7] = 3;
+	m_pIndices[8] = 1;
+
+	m_pIndices[9] =	 1;	//Bottom face
+	m_pIndices[10] = 2;
+	m_pIndices[11] = 3;
+
 	
 	//Create buffers
 	D3D11_BUFFER_DESC bufferDesc = { 0 };
@@ -107,11 +92,22 @@ int Mesh::RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D1
 	context->VSSetShader(VS, nullptr, 0);
 	context->PSSetShader(PS, nullptr, 0);
 
-	//context->DrawIndexed(mNumIndices, 0, 0);
+	context->DrawIndexed(mNumIndices, 0, 0);
 
-	context->Draw(3, 0);
+	//context->Draw(3, 0);
 
 	return 0;
+}
+
+
+void Mesh::SetWorldMatrix(XMFLOAT4X4 SetWorldMatrix)
+{
+	mWorldMatrix = SetWorldMatrix;
+}
+
+XMFLOAT4X4 Mesh::GetWorldMatrix()
+{
+	return mWorldMatrix;
 }
 
 Mesh::~Mesh()

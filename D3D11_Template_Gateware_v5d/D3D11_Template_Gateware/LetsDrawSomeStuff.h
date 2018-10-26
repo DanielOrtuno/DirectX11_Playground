@@ -6,12 +6,21 @@
 // Include DirectX11 for interface access
 
 #include "Mesh.h" //Mesh.h has all the includes for DirectX
+#include "Camera.h"
 #include "BasicVertexShader.csh"
 #include "BasicPixelShader.csh"
 
 // Simple Container class to make life easier/cleaner
 using namespace DirectX;
 
+struct ConstantBuffer
+{
+	XMFLOAT4X4 worldMatrix;
+	XMFLOAT4X4 viewMatrix;
+	XMFLOAT4X4 projMatrix;
+};
+
+Camera mainCamera;
 
 class LetsDrawSomeStuff
 {
@@ -26,6 +35,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader> pixelShader = nullptr;
 	CComPtr<ID3D11VertexShader> vertexShader = nullptr;
 	CComPtr<ID3D11InputLayout> inputLayout = nullptr;
+	CComPtr<ID3D11Buffer> constantBuffer = nullptr;
 
 	Mesh triangle;
 
@@ -55,6 +65,18 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			triangle.MakeTriangle(myDevice);
 
+			XMFLOAT4X4 triangleWorldMatrix = MatrixRegisterToStorage(XMMatrixIdentity() );
+
+			triangle.SetWorldMatrix(triangleWorldMatrix);
+
+	
+			//Camera
+
+			float aspectRatio;
+			mySurface->GetAspectRatio(aspectRatio);
+
+			mainCamera.InitializeCamera(aspectRatio);
+
 			//Loading Shaders
 
 			myDevice->CreateVertexShader(BasicVertexShader, sizeof(BasicVertexShader), nullptr, &vertexShader.p);
@@ -67,6 +89,15 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			};
 
 			myDevice->CreateInputLayout(layout, 2, BasicVertexShader, sizeof(BasicVertexShader), &inputLayout.p);
+
+
+			D3D11_BUFFER_DESC buffDesc = { 0 };
+			buffDesc.Usage = D3D11_USAGE_DYNAMIC;
+			buffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			buffDesc.ByteWidth = sizeof(ConstantBuffer);
+			buffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+			myDevice->CreateBuffer(&buffDesc, nullptr, &constantBuffer.p);
 
 		}
 	}
@@ -115,6 +146,26 @@ void LetsDrawSomeStuff::Render()
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
+
+			ConstantBuffer cb = {  };
+
+			cb.worldMatrix = triangle.GetWorldMatrix();
+			cb.viewMatrix = MatrixRegisterToStorage(XMMatrixInverse(nullptr, MatrixStorageToRegister(mainCamera.mViewMatrix)));
+			cb.projMatrix = mainCamera.mProjMatrix;
+
+
+			D3D11_MAPPED_SUBRESOURCE data = { 0 };
+			myContext->Map(constantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(cb), &cb, sizeof(cb));
+			myContext->Unmap(constantBuffer, 0);
+			
+
+
+			myContext->VSSetConstantBuffers(0, 1, &constantBuffer.p);
+
+
+			myContext->VSSetConstantBuffers(0, 1, &constantBuffer.p);
+
 			triangle.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
 			// Present Backbuffer using Swapchain object

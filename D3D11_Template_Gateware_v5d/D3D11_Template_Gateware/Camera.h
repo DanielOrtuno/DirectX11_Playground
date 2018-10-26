@@ -7,26 +7,18 @@ using namespace DirectX;
 class Camera
 {
 private:
-	XMFLOAT4X4 mViewMatrix;
-	XMFLOAT4X4 mProjMatrix;
-	XMFLOAT3 mUp;
-	XMFLOAT3 mPos;
-	XMFLOAT3 mTarget;
+
+	XMFLOAT4 mUp;
+	XMFLOAT4 mPos;
+	XMFLOAT4 mTarget;
 
 public:
+	XMFLOAT4X4 mViewMatrix;
+	XMFLOAT4X4 mProjMatrix;
+
 	Camera();
 
-	void InitializeCamera()
-	{
-		XMStoreFloat4x4(&mViewMatrix, XMMatrixIdentity());
-		XMStoreFloat4x4(&mProjMatrix, XMMatrixIdentity());
-
-		mPos = XMFLOAT3(0, 0, -1);
-		mTarget = XMFLOAT3(0, 0, 1);
-
-		mUp = RegisterToStorage(StorageToRegister(mPos) + StorageToRegister(mTarget));
-
-	};
+	void InitializeCamera(float aspectRatio);
 
 	~Camera();
 };

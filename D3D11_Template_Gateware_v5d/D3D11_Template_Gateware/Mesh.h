@@ -14,21 +14,15 @@ struct VERTEX
 	XMFLOAT4 color;
 };
 
-struct ConstantBuffer
-{
-	XMFLOAT4X4 worldMatrix;
-	XMFLOAT4X4 viewMatrix;
-	XMFLOAT4X4 projMatrix;
-};
-
 
 class Mesh
 {
 private:
 	
+	XMFLOAT4X4 mWorldMatrix;
 	CComPtr<ID3D11Buffer> m_pVertexBuffer;
 	CComPtr<ID3D11Buffer> m_pIndexBuffer;
-	CComPtr<ID3D11Buffer> m_pConstantBuffer;
+
 	VERTEX* m_pVertices;
 	int*	m_pIndices;
 
@@ -38,6 +32,7 @@ private:
 public:
 	Mesh();
 
+
 	void MakeTriangle(ID3D11Device* device);
 
 	int LoadMeshFromFile(ID3D11Device* device);
@@ -45,6 +40,10 @@ public:
 	int InitializeAsCube(ID3D11Device* device);
 
 	int RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology);
+
+	XMFLOAT4X4 GetWorldMatrix();
+
+	void SetWorldMatrix(XMFLOAT4X4 newMatrix);
 
 	~Mesh();
 };
