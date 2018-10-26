@@ -20,6 +20,7 @@ public:
 
 	void InitializeCamera(float aspectRatio);
 
+
 	~Camera();
 };
 

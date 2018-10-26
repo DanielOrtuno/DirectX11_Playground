@@ -46,12 +46,14 @@
     </ClCompile>
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="XTime.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Defines.h" />
+    <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">

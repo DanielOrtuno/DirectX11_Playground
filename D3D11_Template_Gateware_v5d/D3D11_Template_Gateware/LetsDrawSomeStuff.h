@@ -7,6 +7,7 @@
 
 #include "Mesh.h" //Mesh.h has all the includes for DirectX
 #include "Camera.h"
+#include "XTime.h"
 #include "BasicVertexShader.csh"
 #include "BasicPixelShader.csh"
 
@@ -20,7 +21,7 @@ struct ConstantBuffer
 	XMFLOAT4X4 projMatrix;
 };
 
-Camera mainCamera;
+
 
 class LetsDrawSomeStuff
 {
@@ -39,6 +40,10 @@ class LetsDrawSomeStuff
 
 	Mesh triangle;
 
+	Camera mainCamera;
+
+	XTime timer;
+
 public:
 	// Init
 	LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint);
@@ -46,6 +51,8 @@ public:
 	~LetsDrawSomeStuff();
 	// Draw
 	void Render();
+
+	void UserInput();
 };
 
 // Init
@@ -63,7 +70,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
 
-			triangle.MakeTriangle(myDevice);
+			triangle.MakePyramid(myDevice);
 
 			XMFLOAT4X4 triangleWorldMatrix = MatrixRegisterToStorage(XMMatrixIdentity() );
 
@@ -142,10 +149,14 @@ void LetsDrawSomeStuff::Render()
 			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
 			// Clear the screen to dark green
-			const float d_green[] = { 0, 0.5f, 0, 1 };
+			const float d_green[] = { 0, 0, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
+
+			timer.Signal();
+
+			UserInput();
 
 			ConstantBuffer cb = {  };
 
@@ -176,4 +187,76 @@ void LetsDrawSomeStuff::Render()
 			myRenderTargetView->Release();
 		}
 	}
+}
+
+
+void LetsDrawSomeStuff::UserInput()
+{
+	float delta = (float)timer.Delta();
+	
+	//Camera Movement
+	if(GetAsyncKeyState('W'))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage( XMMatrixTranslation(0.0f, 0.0f, delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState('A'))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(-delta, 0.0f, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+
+	}
+
+	if(GetAsyncKeyState('S'))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(0.0f, 0.0f, -delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState('D'))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(delta, 0.0f, 0.0f) *  MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_SPACE))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(0.0f, delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_LCONTROL))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(0.0f, -delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	//Camera
+
+	if(GetAsyncKeyState(VK_UP))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationX(-delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_RIGHT))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationY(delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_DOWN))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationX(delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_LEFT))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationY(-delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_LSHIFT))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationZ(delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+	if(GetAsyncKeyState(VK_RSHIFT))
+	{
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationZ(-delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+	}
+
+
 }

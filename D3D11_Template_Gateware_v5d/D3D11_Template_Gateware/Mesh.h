@@ -33,7 +33,7 @@ public:
 	Mesh();
 
 
-	void MakeTriangle(ID3D11Device* device);
+	void MakePyramid(ID3D11Device* device);
 
 	int LoadMeshFromFile(ID3D11Device* device);
 

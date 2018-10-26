@@ -12,16 +12,16 @@ Mesh::Mesh()
 }
 
 
-void Mesh::MakeTriangle(ID3D11Device* device)
+void Mesh::MakePyramid(ID3D11Device* device)
 {
 	// Load data into arrays
 	mNumVertices = 4;
 	m_pVertices = new VERTEX[mNumVertices];
 
-	m_pVertices[0] = { XMFLOAT4(0, .5f, .25f, 1),	XMFLOAT4(1,0,0,1) };
-	m_pVertices[1] = { XMFLOAT4(.5, -.5f, 0, 1),	XMFLOAT4(1,0,0,1) };
-	m_pVertices[2] = { XMFLOAT4(-.5f, -.5f, 0, 1),	XMFLOAT4(1,0,0,1) };
-	m_pVertices[3] = { XMFLOAT4(0, -.5f, .5f, 1),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[0] = { XMFLOAT4(0.0f, 0.5f, 0.25f, 1.0f),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[1] = { XMFLOAT4(0.25f, -0.5f, 0.0f, 1.0f),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[2] = { XMFLOAT4(-0.25f, -0.5f, 0.0f, 1.0f),	XMFLOAT4(1,0,0,1) };
+	m_pVertices[3] = { XMFLOAT4(0.25f, -0.5f, 0.5f, 1.0f),	XMFLOAT4(1,0,0,1) };
 
 
 
