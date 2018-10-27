@@ -12,6 +12,7 @@ Mesh::Mesh()
 }
 
 
+
 void Mesh::MakePyramid(ID3D11Device* device)
 {
 	// Load data into arrays
@@ -22,7 +23,6 @@ void Mesh::MakePyramid(ID3D11Device* device)
 	m_pVertices[1] = { XMFLOAT4(0.25f, -0.5f, 0.0f, 1.0f),	XMFLOAT4(1,0,0,1) };
 	m_pVertices[2] = { XMFLOAT4(-0.25f, -0.5f, 0.0f, 1.0f),	XMFLOAT4(1,0,0,1) };
 	m_pVertices[3] = { XMFLOAT4(0.25f, -0.5f, 0.5f, 1.0f),	XMFLOAT4(1,0,0,1) };
-
 
 
 	mNumIndices = 12;
@@ -64,7 +64,6 @@ void Mesh::MakePyramid(ID3D11Device* device)
 
 	device->CreateBuffer(&bufferDesc, &data, &m_pIndexBuffer.p);
 
-
 }
 
 int Mesh::InitializeAsCube(ID3D11Device* device)
@@ -76,6 +75,50 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device)
 {
 	return 0;
 }
+
+void Mesh::LoadMeshFromHeader(ID3D11Device* device, const _OBJ_VERT_* vertArray, int vertexCount, const unsigned int* indexArray, int indexCount)
+{
+	mNumVertices = vertexCount ;
+	mNumIndices = indexCount;
+
+	m_pVertices = new VERTEX[mNumVertices];
+
+	for(int i = 0; i < mNumVertices; i++)
+	{
+		m_pVertices[i].pos = XMFLOAT4{ vertArray[i].pos[0], vertArray[i].pos[1], vertArray[i].pos[2], 1.0f };
+		m_pVertices[i].color = XMFLOAT4{ vertArray[i].uvw[0], vertArray[i].uvw[1], vertArray[i].uvw[2], 1.0f };
+		m_pVertices[i].normal = XMFLOAT3{ vertArray[i].nrm[0], vertArray[i].nrm[1], vertArray[i].nrm[2]};
+	}
+
+	m_pIndices = new int[mNumIndices];
+
+	for(int i = 0; i < mNumIndices; i++)
+	{
+		m_pIndices[i] = indexArray[i];
+	}
+
+	//Create buffers
+	D3D11_BUFFER_DESC bufferDesc = { 0 };
+	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.ByteWidth = sizeof(VERTEX) * mNumVertices;
+	bufferDesc.CPUAccessFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA data = { 0 };
+	data.pSysMem = m_pVertices;
+
+	device->CreateBuffer(&bufferDesc, &data, &m_pVertexBuffer.p);
+
+	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bufferDesc.ByteWidth = sizeof(int) * mNumIndices;
+
+	data.pSysMem = m_pIndices;
+
+	device->CreateBuffer(&bufferDesc, &data, &m_pIndexBuffer.p);
+
+}
+
+
 
 int Mesh::RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology)
 {

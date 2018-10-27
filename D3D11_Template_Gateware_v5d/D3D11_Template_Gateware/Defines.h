@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include <atlcomcli.h>
+#include "ThorHammer.h" 
 
 using namespace DirectX;
 

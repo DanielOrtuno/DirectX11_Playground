@@ -1,16 +1,21 @@
 #pragma pack_matrix(row_major)
 
-cbuffer cb : register( b0 )
+cbuffer cameraBuffer : register( b0 )
 {
-	float4x4 worldMatrix;
 	float4x4 viewMatrix;
 	float4x4 projMatrix;
+};
+
+cbuffer meshBuffer : register( b1 )
+{
+	float4x4 worldMatrix;
 };
 
 struct VERTEX
 {
 	float4 pos : POSITION;
 	float4 color : COLOR;
+	float3 normal : NORMAL;
 };
 
 struct OUTPUT

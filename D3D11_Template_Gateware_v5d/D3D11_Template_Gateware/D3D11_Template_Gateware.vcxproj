@@ -147,6 +147,7 @@
     <ClInclude Include="Defines.h" />
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="ThorHammer.h" />
     <ClInclude Include="XTime.h" />
   </ItemGroup>
   <ItemGroup>
