@@ -17,6 +17,17 @@ using namespace DirectX;
 struct MeshConstantBuffer
 {
 	XMFLOAT4X4 worldMatrix;
+	XMFLOAT4 color;
+	int enableTexture;
+	int x;
+	int y;
+	int z;
+};
+
+struct LightConstantBuffer
+{
+	XMFLOAT4 lightDirection[2];
+	XMFLOAT4 lightColor[2];
 };
 
 struct CameraConstantBuffer
@@ -41,6 +52,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	CComPtr<ID3D11Buffer> cameraConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> meshConstBuff = nullptr;
+	CComPtr<ID3D11Buffer> lightConstBuff = nullptr;
 
 	Mesh triangle;
 	Mesh hammer;
@@ -80,7 +92,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
 
 			//Models
-			triangle.MakePyramid(myDevice);
+			triangle.InitializeAs3DGrid(myDevice);
 
 			XMFLOAT4X4 triangleWorldMatrix = MatrixRegisterToStorage(XMMatrixIdentity() * XMMatrixTranslation(0,0,1));
 
@@ -89,8 +101,21 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			
 			hammer.LoadMeshFromHeader(myDevice, ThorHammer_data, 884, ThorHammer_indicies , 1788);
 
-			triangle.SetWorldMatrix(MatrixRegisterToStorage(XMMatrixIdentity()));
+			hammer.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/HammerTexture.dds");
 
+			D3D11_SAMPLER_DESC desc = { };
+			ZeroMemory(&desc, sizeof(desc));
+
+			desc.Filter = D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.MinLOD = 0;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			
+			myDevice->CreateSamplerState(&desc, &hammer.m_pSamplerState.p);
+
+			triangle.SetWorldMatrix(MatrixRegisterToStorage(XMMatrixIdentity()));
 	
 			//Camera
 
@@ -107,7 +132,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			D3D11_INPUT_ELEMENT_DESC layout[]
 			{
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXTURECOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 			};
 
@@ -124,6 +149,9 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			buffDesc.ByteWidth = sizeof(CameraConstantBuffer);
 			myDevice->CreateBuffer(&buffDesc, nullptr, &cameraConstBuff.p);
+
+			buffDesc.ByteWidth = sizeof(LightConstantBuffer);
+			myDevice->CreateBuffer(&buffDesc, nullptr, &lightConstBuff.p);
 
 		}
 	}
@@ -173,6 +201,9 @@ void LetsDrawSomeStuff::Render()
 			
 			// TODO: Set your shaders, Update & Set your constant buffers, Attatch your vertex & index buffers, Set your InputLayout & Topology & Draw!
 
+			D3D11_MAPPED_SUBRESOURCE data = { 0 };
+
+			//Update Camera Buffer
 			if(updateCameraBuffer)
 			{
 				CameraConstantBuffer ccb = {  };
@@ -180,7 +211,7 @@ void LetsDrawSomeStuff::Render()
 				ccb.viewMatrix = MatrixRegisterToStorage(XMMatrixInverse(nullptr, MatrixStorageToRegister(mainCamera.mViewMatrix)));
 				ccb.projMatrix = mainCamera.mProjMatrix;
 
-				D3D11_MAPPED_SUBRESOURCE data = { 0 };
+				
 				myContext->Map(cameraConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 				memcpy_s(data.pData, sizeof(ccb), &ccb, sizeof(ccb));
 				myContext->Unmap(cameraConstBuff, 0);
@@ -190,22 +221,48 @@ void LetsDrawSomeStuff::Render()
 				updateCameraBuffer = false;
 			}
 
+			//Update light buffer
+
+			LightConstantBuffer lcb = {  };
+			lcb.lightDirection[0] = XMFLOAT4(0.577f, -0.6f, 0.577f, 1.0f);
+			lcb.lightDirection[1] = XMFLOAT4(-0.577f, 0.6f, -0.577f, 1.0f);
+			lcb.lightColor[0] = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.1f);
+			lcb.lightColor[1] = XMFLOAT4(0.2f, 0.1f, 0.8f, 0.1f);
+
+			data = { 0 };
+			myContext->Map(lightConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(lcb), &lcb, sizeof(lcb));
+			myContext->Unmap(lightConstBuff, 0);
+
+			myContext->VSSetConstantBuffers(2, 1, &lightConstBuff.p);
+
+			//Update Mesh buffer for Mjölnir 
 			MeshConstantBuffer mcb = {  };
 
 			mcb.worldMatrix = triangle.GetWorldMatrix();
+			mcb.color = XMFLOAT4{ 0,1,0,0 };
+			mcb.enableTexture = 1;
 
-			D3D11_MAPPED_SUBRESOURCE data = { 0 };
+			data = { 0 };
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
 			myContext->Unmap(meshConstBuff, 0);
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
-
-			triangle.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
+
+			//Update Mesh buffer for Grid
+			data = { 0 };
+			mcb.enableTexture = 0;
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
+
+			triangle.TestGrid(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
@@ -248,13 +305,13 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_SPACE))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(0.0f, delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_LCONTROL))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(0.0f, -delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, -delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 

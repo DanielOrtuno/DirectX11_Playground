@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="Mesh.h" />
@@ -152,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Audio\GAudio.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Graphics\GDirectX11Surface.cpp" />
     <ClCompile Include="Gateware Redistribution R5d\Source\G_Graphics\GOpenGLSurface.cpp" />
@@ -198,6 +200,10 @@
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).csh</HeaderFileOutput>
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename)</VariableName>
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).csh</HeaderFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

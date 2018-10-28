@@ -1,5 +1,5 @@
 #pragma once
-
+#define _CRT_SECURE_NO_WARNINGS
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include <atlcomcli.h>
