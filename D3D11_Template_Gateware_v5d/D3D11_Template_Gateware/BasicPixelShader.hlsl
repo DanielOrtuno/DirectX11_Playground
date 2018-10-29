@@ -22,7 +22,7 @@ float4 main(OUTPUT input) : SV_TARGET
 
 		for(int i = 0; i < 2; i++)
 		{
-			float lightRatio = clamp(dot(( float3 )-input.lightDirection[i], input.normal), 0, 1);
+			float lightRatio = clamp(dot(-input.lightDirection[i].xyz, input.normal), 0, 1);
 
 			lightRatio = clamp(lightRatio + .15f, 0, 1);
 			finalColor += lightRatio * input.lightColor[i] * diffuseMap.Sample(filter, uv);;

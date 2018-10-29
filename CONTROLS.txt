@@ -1,0 +1,9 @@
+WASD = move forward/left/backward/right
+
+Spacebar = move up
+
+LeftControl = move down
+
+arrow keys = rotate x and y
+
+left/right shift = rotate z

@@ -111,7 +111,7 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 			newVertex = { XMFLOAT4(.5f, posY, pos, 1.0f) };
 			list.push_back(newVertex);
 
-			pos += .1f;d
+			pos += .1f;
 		}
 
 	////	posY += .1f;
@@ -286,8 +286,6 @@ int Mesh::RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D1
 	context->PSSetShader(PS, nullptr, 0);
 
 	context->DrawIndexed(mNumIndices, 0, 0);
-
-	//context->Draw(3, 0);
 
 	return 0;
 }

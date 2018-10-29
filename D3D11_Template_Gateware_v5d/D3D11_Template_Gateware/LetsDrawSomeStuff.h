@@ -72,6 +72,8 @@ public:
 	void Render();
 
 	void ManageUserInput();
+
+	void UpdateProjection(GW::SYSTEM::GWindow* attatchPoint);
 };
 
 // Init
@@ -225,9 +227,12 @@ void LetsDrawSomeStuff::Render()
 
 			LightConstantBuffer lcb = {  };
 			lcb.lightDirection[0] = XMFLOAT4(0.577f, -0.6f, 0.577f, 1.0f);
-			lcb.lightDirection[1] = XMFLOAT4(-0.577f, 0.6f, -0.577f, 1.0f);
+			lcb.lightDirection[1] = XMFLOAT4(0, 0, 1, 1.0f);
 			lcb.lightColor[0] = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.1f);
 			lcb.lightColor[1] = XMFLOAT4(0.2f, 0.1f, 0.8f, 0.1f);
+			
+			lcb.lightDirection[1] = VectorRegisterToStorage(XMVector3Rotate(VectorStorageToRegister(lcb.lightDirection[1]), XMQuaternionRotationMatrix(XMMatrixRotationY((float)timer.TotalTime() * 2))));
+
 
 			data = { 0 };
 			myContext->Map(lightConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
@@ -252,15 +257,24 @@ void LetsDrawSomeStuff::Render()
 
 			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
+			hammer.SetWorldMatrix(MatrixRegisterToStorage(XMMatrixTranslationFromVector(VectorStorageToRegister(lcb.lightDirection[1]))));
+
+			hammer.SetWorldMatrix(MatrixRegisterToStorage(MatrixStorageToRegister(hammer.GetWorldMatrix()) * XMMatrixScaling(.1f, .1f, .1f)));
 
 			//Update Mesh buffer for Grid
 			data = { 0 };
 			mcb.enableTexture = 0;
+			mcb.worldMatrix = hammer.GetWorldMatrix();
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
 			myContext->Unmap(meshConstBuff, 0);
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
+
+
+
+			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 
 			triangle.TestGrid(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 			// Present Backbuffer using Swapchain object
@@ -354,4 +368,12 @@ void LetsDrawSomeStuff::ManageUserInput()
 	}
 
 
+}
+
+void LetsDrawSomeStuff::UpdateProjection(GW::SYSTEM::GWindow* attatchPoint)
+{
+	float aspectRatio;
+	mySurface->GetAspectRatio(aspectRatio);
+	mainCamera.mProjMatrix = MatrixRegisterToStorage(XMMatrixPerspectiveFovLH(90, aspectRatio, .1f, 10000));
+	updateCameraBuffer = true;
 }
