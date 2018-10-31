@@ -1,0 +1,8 @@
+﻿  Mesh.cpp
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\mesh.cpp(209): warning C4018: '<': signed/unsigned mismatch
+  Generating code
+  0 of 1780 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  D3D11_Template_Gateware.vcxproj -> C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\Release\D3D11_Template_Gateware.exe

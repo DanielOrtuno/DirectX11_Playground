@@ -4,15 +4,16 @@
 #include <DirectXMath.h>
 #include <atlcomcli.h>
 #include "ThorHammer.h" 
+#include "LivingRoom.h"
 
 using namespace DirectX;
 
-inline XMVECTOR VectorStorageToRegister(XMFLOAT4 vector)
+inline XMVECTOR VectorRegister(XMFLOAT4 vector)
 {
 	return XMLoadFloat4(&vector);
 }
 
-inline XMFLOAT4  VectorRegisterToStorage(XMVECTOR vector)
+inline XMFLOAT4  VectorStorage(XMVECTOR vector)
 {
 	XMFLOAT4 result;
 
@@ -21,7 +22,7 @@ inline XMFLOAT4  VectorRegisterToStorage(XMVECTOR vector)
 	return result;
 }
 
-inline XMFLOAT4X4 MatrixRegisterToStorage(XMMATRIX matrix)
+inline XMFLOAT4X4 MatrixStorage(XMMATRIX matrix)
 {
 	XMFLOAT4X4 result;
 
@@ -30,7 +31,7 @@ inline XMFLOAT4X4 MatrixRegisterToStorage(XMMATRIX matrix)
 	return result;
 }
 
-inline XMMATRIX MatrixStorageToRegister(XMFLOAT4X4 matrix)
+inline XMMATRIX MatrixRegister(XMFLOAT4X4 matrix)
 {
 	return XMLoadFloat4x4(&matrix);
 }

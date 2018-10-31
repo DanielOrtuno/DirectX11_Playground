@@ -1,6 +1,8 @@
 #pragma once
 
 #include "defines.h"
+#include <random>
+#include <time.h>
 
 using namespace DirectX;
 

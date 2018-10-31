@@ -1,2 +1,7 @@
-﻿  main.cpp
+﻿  compilation header save succeeded; see C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\D3D11_Template_Gateware\GridVertexShader.csh
+  compilation object save succeeded; see C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\Debug\GridVertexShader.cso
+  main.cpp
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(296): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(299): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\main.cpp(27): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
   D3D11_Template_Gateware.vcxproj -> C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\Debug\D3D11_Template_Gateware.exe

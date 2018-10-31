@@ -44,7 +44,6 @@ public:
 
 	void InitializeAs3DGrid(ID3D11Device* device);
 
-
 	int LoadMeshFromFile(ID3D11Device* device, const wchar_t filename[]);
 
 	void LoadMeshFromHeader(ID3D11Device* device, const _OBJ_VERT_* vertArray, int vertexCount, const unsigned int* indexArray, int indexCount);

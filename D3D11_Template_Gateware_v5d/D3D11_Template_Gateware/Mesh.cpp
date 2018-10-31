@@ -77,45 +77,41 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 {
 	std::vector<VERTEX> list;
 
-	float posY = -0.5f;
+	float pos = -1;
 
+	for(pos; pos < 1; pos += 0.1f)
+	{
+		VERTEX newVertex;
 
+		if(rand() % 2 == 0)
+			newVertex = VERTEX{ XMFLOAT4(pos, 0.0f, -1, 1), XMFLOAT3(9,0,0) };
+		else
+			newVertex = VERTEX{ XMFLOAT4(pos, 0.0f, -1, 1)};
 
-	//for(int i = 0; i < 11; i++)
-	//{
-		float pos = -0.5f;
-		for(int i = 0; i < 22; i += 2)
-		{
-			VERTEX newVertex;
+		list.push_back(newVertex);
 
-			//Col
-			newVertex = { XMFLOAT4(pos, posY, -.5f, 1.0f) };
-			list.push_back(newVertex);
+		if(rand() % 2 == 0)
+			newVertex = VERTEX{ XMFLOAT4(pos, 0.0f, .9f, 1), XMFLOAT3(9,0,0) };
+		else
+			newVertex = VERTEX{ XMFLOAT4(pos, 0.0f, .9f, 1) };
 
-			newVertex = { XMFLOAT4(pos, posY, .5f, 1.0f) };
-			list.push_back(newVertex);
+		list.push_back(newVertex);
 
+		if(rand() % 2 == 0)
+			newVertex = VERTEX{ XMFLOAT4(-1, 0.0f, pos, 1), XMFLOAT3(9,0,0) };
+		else
+			newVertex = VERTEX{ XMFLOAT4(-1, 0.0f, pos, 1) };
 
-			//Row
-			newVertex = { XMFLOAT4(-.5f, posY, pos, 1.0f) };
-			list.push_back(newVertex);
+		list.push_back(newVertex);
 
-			newVertex = { XMFLOAT4( .5f, posY, pos, 1.0f ) };
-			list.push_back(newVertex);
+		if(rand() % 2 == 0)
+			newVertex = VERTEX{ XMFLOAT4(.9f, 0.0f, pos, 1), XMFLOAT3(9,0,0) };
+		else
+			newVertex = VERTEX{ XMFLOAT4(.9f, 0.0f, pos, 1) };
 
+		list.push_back(newVertex);
 
-			//North Korea
-			newVertex = { XMFLOAT4(-.5f, posY, pos, 1.0f) };
-			list.push_back(newVertex);
-
-			newVertex = { XMFLOAT4(.5f, posY, pos, 1.0f) };
-			list.push_back(newVertex);
-
-			pos += .1f;
-		}
-
-	////	posY += .1f;
-	////}
+	}
 
 	mNumVertices = list.size();
 	m_pVertices = new VERTEX[mNumVertices];
@@ -262,7 +258,6 @@ void Mesh::LoadTexture(ID3D11Device* device, const wchar_t filename[])
 {
 	CreateDDSTextureFromFile(device, filename, (ID3D11Resource**)&m_pDiffuseMap.p, &m_pSRV.p);
 }
-
 
 int Mesh::RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology)
 {

@@ -10,6 +10,7 @@
 #include "XTime.h"
 #include "BasicVertexShader.csh"
 #include "BasicPixelShader.csh"
+#include "GridVertexShader.csh"
 
 // Simple Container class to make life easier/cleaner
 using namespace DirectX;
@@ -19,8 +20,8 @@ struct MeshConstantBuffer
 	XMFLOAT4X4 worldMatrix;
 	XMFLOAT4 color;
 	int enableTexture;
-	int x;
-	int y;
+	float time;
+	int dir;
 	int z;
 };
 
@@ -28,6 +29,8 @@ struct LightConstantBuffer
 {
 	XMFLOAT4 lightDirection[2];
 	XMFLOAT4 lightColor[2];
+	XMFLOAT4 pointlightPos;
+	XMFLOAT4 pointlightColor;
 };
 
 struct CameraConstantBuffer
@@ -36,6 +39,7 @@ struct CameraConstantBuffer
 	XMFLOAT4X4 projMatrix;
 };
 
+// use normals for light saber (dot product)
 
 class LetsDrawSomeStuff
 {
@@ -49,17 +53,26 @@ class LetsDrawSomeStuff
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
 	CComPtr<ID3D11PixelShader> pixelShader = nullptr;
 	CComPtr<ID3D11VertexShader> vertexShader = nullptr;
+	CComPtr<ID3D11VertexShader> gridShader = nullptr;
 	CComPtr<ID3D11InputLayout> inputLayout = nullptr;
+
 	CComPtr<ID3D11Buffer> cameraConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> meshConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> lightConstBuff = nullptr;
-
-	Mesh triangle;
+	CComPtr<ID3D11Buffer> pixelConstBuff = nullptr;
+	
+	Mesh grid;
 	Mesh hammer;
+	Mesh livingroom;
 
 	Camera mainCamera;
 
 	bool updateCameraBuffer;
+	bool turnOnSecondLight;
+
+	float gridTimer = 0;
+
+	bool gridDirection = true;
 
 public:
 
@@ -85,6 +98,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 		if (G_SUCCESS(GW::GRAPHICS::CreateGDirectX11Surface(attatchPoint, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT, &mySurface)))
 		{
 			updateCameraBuffer = true;
+			turnOnSecondLight = true;
 
 			// Grab handles to all DX11 base interfaces
 			mySurface->GetDevice((void**)&myDevice);
@@ -93,17 +107,39 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			// TODO: Create new DirectX stuff here! (Buffers, Shaders, Layouts, Views, Textures, etc...)
 
-			//Models
-			triangle.InitializeAs3DGrid(myDevice);
+			#pragma region Camera
 
-			XMFLOAT4X4 triangleWorldMatrix = MatrixRegisterToStorage(XMMatrixIdentity() * XMMatrixTranslation(0,0,1));
+			float aspectRatio;
+			mySurface->GetAspectRatio(aspectRatio);
 
-			triangle.SetWorldMatrix(triangleWorldMatrix);
+			mainCamera.InitializeCamera(aspectRatio);
 
-			
+			#pragma endregion
+
+
+			#pragma region Meshes
+
+			//Grid
+			grid.InitializeAs3DGrid(myDevice);
+			XMFLOAT4X4 gridWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,4.5f,0));
+			grid.SetWorldMatrix(gridWorldMatrix);
+
+
+			//Mjölnir
+			XMFLOAT4X4 hammerWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,1.5f,0));
+			hammer.SetWorldMatrix(hammerWorldMatrix);
 			hammer.LoadMeshFromHeader(myDevice, ThorHammer_data, 884, ThorHammer_indicies , 1788);
-
 			hammer.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/HammerTexture.dds");
+
+			//Livingroom
+			XMFLOAT4X4 livingroomWorldMatrix = MatrixStorage(XMMatrixIdentity());
+			livingroom.SetWorldMatrix(livingroomWorldMatrix);
+			livingroom.LoadMeshFromHeader(myDevice, LivingRoom_data, 30224, LivingRoom_indicies, 31140);
+
+			#pragma endregion 
+			
+
+			#pragma region Sampler
 
 			D3D11_SAMPLER_DESC desc = { };
 			ZeroMemory(&desc, sizeof(desc));
@@ -117,19 +153,19 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			
 			myDevice->CreateSamplerState(&desc, &hammer.m_pSamplerState.p);
 
-			triangle.SetWorldMatrix(MatrixRegisterToStorage(XMMatrixIdentity()));
-	
-			//Camera
+			#pragma endregion
 
-			float aspectRatio;
-			mySurface->GetAspectRatio(aspectRatio);
 
-			mainCamera.InitializeCamera(aspectRatio);
-
-			//Loading Shaders
+			#pragma region Shaders
 
 			myDevice->CreateVertexShader(BasicVertexShader, sizeof(BasicVertexShader), nullptr, &vertexShader.p);
 			myDevice->CreatePixelShader(BasicPixelShader, sizeof(BasicPixelShader), nullptr, &pixelShader.p);
+			myDevice->CreateVertexShader(GridVertexShader, sizeof(GridVertexShader), nullptr, &gridShader.p);
+
+			#pragma endregion
+
+
+			#pragma region Input Layout
 
 			D3D11_INPUT_ELEMENT_DESC layout[]
 			{
@@ -140,6 +176,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			myDevice->CreateInputLayout(layout, 3, BasicVertexShader, sizeof(BasicVertexShader), &inputLayout.p);
 
+			#pragma endregion
+
+
+			#pragma region  Constant Buffers
 
 			D3D11_BUFFER_DESC buffDesc = { 0 };
 			buffDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -155,6 +195,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			buffDesc.ByteWidth = sizeof(LightConstantBuffer);
 			myDevice->CreateBuffer(&buffDesc, nullptr, &lightConstBuff.p);
 
+
+			#pragma endregion
 		}
 	}
 }
@@ -197,7 +239,7 @@ void LetsDrawSomeStuff::Render()
 			ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
 			myContext->OMSetRenderTargets(1, targets, myDepthStencilView);
 
-			// Clear the screen to dark green
+			// Clear the screen to black
 			const float d_green[] = { 0, 0, 0, 1 };
 			myContext->ClearRenderTargetView(myRenderTargetView, d_green);
 			
@@ -210,7 +252,7 @@ void LetsDrawSomeStuff::Render()
 			{
 				CameraConstantBuffer ccb = {  };
 
-				ccb.viewMatrix = MatrixRegisterToStorage(XMMatrixInverse(nullptr, MatrixStorageToRegister(mainCamera.mViewMatrix)));
+				ccb.viewMatrix = MatrixStorage(XMMatrixInverse(nullptr, MatrixRegister(mainCamera.mViewMatrix)));
 				ccb.projMatrix = mainCamera.mProjMatrix;
 
 				
@@ -223,30 +265,44 @@ void LetsDrawSomeStuff::Render()
 				updateCameraBuffer = false;
 			}
 
-			//Update light buffer
+			//Update lights
 
 			LightConstantBuffer lcb = {  };
 			lcb.lightDirection[0] = XMFLOAT4(0.577f, -0.6f, 0.577f, 1.0f);
 			lcb.lightDirection[1] = XMFLOAT4(0, 0, 1, 1.0f);
 			lcb.lightColor[0] = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.1f);
-			lcb.lightColor[1] = XMFLOAT4(0.2f, 0.1f, 0.8f, 0.1f);
-			
-			lcb.lightDirection[1] = VectorRegisterToStorage(XMVector3Rotate(VectorStorageToRegister(lcb.lightDirection[1]), XMQuaternionRotationMatrix(XMMatrixRotationY((float)timer.TotalTime() * 2))));
+			lcb.pointlightPos = XMFLOAT4(-7, 2.2f, 2, 1);
+			lcb.pointlightColor = XMFLOAT4(1, 0, 0, 1);
 
+
+			if(turnOnSecondLight)
+				lcb.lightColor[1] = XMFLOAT4(0.2f, 0.1f, 0.8f, 0.1f);
+			else
+				lcb.lightColor[1] = XMFLOAT4(0,0,0,0);
+
+			lcb.lightDirection[1] = VectorStorage(XMVector3Rotate(VectorRegister(lcb.lightDirection[1]), XMQuaternionRotationMatrix(XMMatrixRotationY((float)timer.TotalTime() * 2))));
 
 			data = { 0 };
 			myContext->Map(lightConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(lcb), &lcb, sizeof(lcb));
 			myContext->Unmap(lightConstBuff, 0);
+			
+			myContext->PSSetConstantBuffers(0, 1, &lightConstBuff.p);
 
-			myContext->VSSetConstantBuffers(2, 1, &lightConstBuff.p);
-
-			//Update Mesh buffer for Mjölnir 
+			//Mjölnir 
 			MeshConstantBuffer mcb = {  };
-
-			mcb.worldMatrix = triangle.GetWorldMatrix();
-			mcb.color = XMFLOAT4{ 0,1,0,0 };
+			mcb.worldMatrix = hammer.GetWorldMatrix();
 			mcb.enableTexture = 1;
+			mcb.time = timer.TotalTime();
+			mcb.dir = gridDirection;
+
+			gridTimer += timer.Delta();
+			
+			if(gridTimer > 1)
+			{
+				mcb.dir = !mcb.dir;
+				gridTimer = 0;
+			}
 
 			data = { 0 };
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
@@ -257,26 +313,62 @@ void LetsDrawSomeStuff::Render()
 
 			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
-			hammer.SetWorldMatrix(MatrixRegisterToStorage(XMMatrixTranslationFromVector(VectorStorageToRegister(lcb.lightDirection[1]))));
+			XMVECTOR lightPosition = VectorRegister(lcb.lightDirection[1]);
+			lightPosition *= VectorRegister(XMFLOAT4(3,1,3,1));
 
-			hammer.SetWorldMatrix(MatrixRegisterToStorage(MatrixStorageToRegister(hammer.GetWorldMatrix()) * XMMatrixScaling(.1f, .1f, .1f)));
+			XMFLOAT4X4 lightMatrix = (MatrixStorage(XMMatrixScaling(.2f, .2f, .2f) * XMMatrixTranslationFromVector(-lightPosition * 5) * XMMatrixTranslation(0,5,0)));
 
-			//Update Mesh buffer for Grid
+			//Second Mjolnir 
 			data = { 0 };
 			mcb.enableTexture = 0;
-			mcb.worldMatrix = hammer.GetWorldMatrix();
+			mcb.color = XMFLOAT4( 0.2f, 0.1f, 0.8f, 0.1f );
+			mcb.worldMatrix = lightMatrix;
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
 			myContext->Unmap(meshConstBuff, 0);
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
+			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+			// Third Mjolnir
+			lightMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(.2f, .2f, .2f));
+
+			lightMatrix._41 = lcb.pointlightPos.x;
+			lightMatrix._42 = lcb.pointlightPos.y;
+			lightMatrix._43 = lcb.pointlightPos.z;
+
+			data = { 0 };
+			mcb.enableTexture = 0;
+			mcb.color = XMFLOAT4(0.5f, 0, 0, 1);
+			mcb.worldMatrix = lightMatrix;
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
 			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+			//Grid
+			mcb.color = XMFLOAT4(0.0f,1.0f,0.0f, 0.5f);
+			mcb.worldMatrix = grid.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
 
-			triangle.TestGrid(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+			grid.TestGrid(myContext, gridShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+			//Livingroom
+			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+			mcb.worldMatrix = livingroom.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+			
+
+			livingroom.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
 			mySwapChain->Present(0, 0); // set first argument to 1 to enable vertical refresh sync with display
@@ -290,42 +382,47 @@ void LetsDrawSomeStuff::Render()
 
 void LetsDrawSomeStuff::ManageUserInput()
 {
-	float delta = (float)timer.Delta();
+	float delta = (float)timer.Delta() * 1.5f;
 	
+	if(GetAsyncKeyState('I') & 0x1)
+	{
+		turnOnSecondLight = !turnOnSecondLight;
+	}
+
 	//Camera Movement
 	if(GetAsyncKeyState('W'))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage( XMMatrixTranslation(0.0f, 0.0f, delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * 2) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('A'))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(-delta, 0.0f, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * 2, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('S'))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(0.0f, 0.0f, -delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * 2) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('D'))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixTranslation(delta, 0.0f, 0.0f) *  MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * 2, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_SPACE))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, delta * 2, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_LCONTROL))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, -delta, 0.0f) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, -delta * 2, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
@@ -333,37 +430,69 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_UP))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationX(-delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationX(-delta) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_RIGHT))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage( MatrixStorageToRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(delta));
-		updateCameraBuffer = true;
+		XMVECTOR pos;
+		XMVECTOR rot;
+		XMVECTOR scale;
+
+		XMMatrixDecompose(&scale, &rot, &pos, MatrixRegister(mainCamera.mViewMatrix));
+		
+		mainCamera.mViewMatrix._41, mainCamera.mViewMatrix._42, mainCamera.mViewMatrix._43 = 0;
+
+		mainCamera.mViewMatrix = MatrixStorage( MatrixRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(delta) );
+
+		XMFLOAT4 hey = VectorStorage(pos);
+
+		mainCamera.mViewMatrix._41 = hey.x;
+		mainCamera.mViewMatrix._42 = hey.y;
+		mainCamera.mViewMatrix._43 = hey.z;
+
+		updateCameraBuffer = true;								
+
 	}
 
 	if(GetAsyncKeyState(VK_DOWN))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationX(delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationX(delta) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_LEFT))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(MatrixStorageToRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(-delta));
+		XMVECTOR pos;
+		XMVECTOR rot;
+		XMVECTOR scale;
+
+		XMMatrixDecompose(&scale, &rot, &pos, MatrixRegister(mainCamera.mViewMatrix));
+
+		mainCamera.mViewMatrix._41, mainCamera.mViewMatrix._42, mainCamera.mViewMatrix._43 = 0;
+
+		mainCamera.mViewMatrix = MatrixStorage(MatrixRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(-delta));
+
+		XMFLOAT4 hey = VectorStorage(pos);
+
+		mainCamera.mViewMatrix._41 = hey.x;
+		mainCamera.mViewMatrix._42 = hey.y;
+		mainCamera.mViewMatrix._43 = hey.z;
+
+
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_LSHIFT))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationZ(delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationZ(delta) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_RSHIFT))
 	{
-		mainCamera.mViewMatrix = MatrixRegisterToStorage(XMMatrixRotationZ(-delta) * MatrixStorageToRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationZ(-delta) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
@@ -374,6 +503,6 @@ void LetsDrawSomeStuff::UpdateProjection(GW::SYSTEM::GWindow* attatchPoint)
 {
 	float aspectRatio;
 	mySurface->GetAspectRatio(aspectRatio);
-	mainCamera.mProjMatrix = MatrixRegisterToStorage(XMMatrixPerspectiveFovLH(90, aspectRatio, .1f, 10000));
+	mainCamera.mProjMatrix = MatrixStorage(XMMatrixPerspectiveFovLH(65, aspectRatio, .1f, 10000));
 	updateCameraBuffer = true;
 }
