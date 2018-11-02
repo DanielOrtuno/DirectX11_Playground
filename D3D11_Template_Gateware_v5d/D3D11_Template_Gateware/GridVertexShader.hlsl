@@ -29,6 +29,7 @@ struct OUTPUT
 	float4 pos : SV_POSITION;
 	float3 normal : NORMAL;
 	float4 color : OCOLOR;
+	float4 worldPos : POSITION;
 	bool useTexture : BOOL;
 };
 
@@ -59,6 +60,7 @@ OUTPUT main(VERTEX input)
 	output.normal = input.normal;
 
 	output.pos = mul(output.pos, worldMatrix);
+	output.worldPos = output.pos;
 	output.pos = mul(output.pos, viewMatrix);
 	output.pos = mul(output.pos, projMatrix);
 

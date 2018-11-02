@@ -135,16 +135,17 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 
 }
 
-int Mesh::LoadMeshFromFile(ID3D11Device* device, const wchar_t filename[])
+int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[])
 {
-	FILE* file = fopen("..//D3D11_Template_Gateware//TestFile.obj", "r");
+	FILE* file = fopen(filename, "r");
 
 	if(file == NULL)
 		return 1;
 	
-	std::vector<XMFLOAT4> posiciones;
-	std::vector<XMFLOAT2> uv;
-	std::vector<XMFLOAT3> normales;
+	std::vector<XMFLOAT4> temp_vertices;
+	std::vector<XMFLOAT3> temp_uv;
+	std::vector<XMFLOAT3> temp_normals;
+
 	std::vector<int>	  vertexIndices;
 	std::vector<int>	  uvIndices;
 	std::vector<int>	  normalIndices;
@@ -155,7 +156,7 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const wchar_t filename[])
 		char buffer[100];
 		int result = fscanf(file, "%s", buffer);
 
-		if(result == NULL)
+		if(result == EOF)
 			break;
 
 		if(strcmp(buffer, "v"))
@@ -164,21 +165,21 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const wchar_t filename[])
 			fscanf(file, "%f %f %f\n", &newData.x, &newData.y, &newData.z);
 
 			newData.w = 1.0f;
-			posiciones.push_back(newData);
+			temp_vertices.push_back(newData);
 		}
 		else if(strcmp(buffer, "vt"))
 		{
-			XMFLOAT2 newData;
+			XMFLOAT3 newData;
 			fscanf(file, "%f %f\n", &newData.x, &newData.y);
-
-			uv.push_back(newData);
+			newData.z = 0;
+			temp_uv.push_back(newData);
 		}
 		else if(strcmp(buffer, "vn"))
 		{
 			XMFLOAT3 newData;
 			fscanf(file, "%f %f %f\n", &newData.x, &newData.y, &newData.z);
 
-			normales.push_back(newData);
+			temp_normals.push_back(newData);
 		}
 		else if(strcmp(buffer, "f"))
 		{
@@ -200,13 +201,20 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const wchar_t filename[])
 			normalIndices.push_back(z[1]);
 			normalIndices.push_back(z[2]);
 		}
+
 	}
 
 //	m_pVertices = new VERTEX[vertexIndices.size];
 
-	for(int i = 0; i < vertexIndices.size(); i++)
+
+	std::unordered_map<int, VERTEX> hello;
+
+	for(unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
-		
+		hello[i] = VERTEX{ temp_vertices[vertexIndices[i]], temp_uv[uvIndices[i]], temp_normals[normalIndices[i]] };
+
+		hello[i + 1] = VERTEX{ temp_vertices[vertexIndices[i]], temp_uv[uvIndices[i]], temp_normals[normalIndices[i]] };
+
 	}
 
 	return 0;

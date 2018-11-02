@@ -5,6 +5,7 @@
 #include <atlcomcli.h>
 #include "ThorHammer.h" 
 #include "LivingRoom.h"
+#include "DC-15_Blaster.h"
 
 using namespace DirectX;
 

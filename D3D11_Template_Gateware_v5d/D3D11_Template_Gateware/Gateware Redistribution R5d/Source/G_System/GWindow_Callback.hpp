@@ -139,6 +139,8 @@ namespace
 		{
 			*GEvents = GWindowInputEvents::DESTROY;
 		}
+
+
 		default:
 		{
             Sleep(0);

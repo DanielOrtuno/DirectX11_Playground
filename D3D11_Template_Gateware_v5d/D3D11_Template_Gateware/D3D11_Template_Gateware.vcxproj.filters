@@ -72,6 +72,9 @@
     <ClInclude Include="LivingRoom.h">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="DC-15_Blaster.h">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Gateware Source">

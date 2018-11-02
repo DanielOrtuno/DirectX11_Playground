@@ -29,8 +29,13 @@ struct LightConstantBuffer
 {
 	XMFLOAT4 lightDirection[2];
 	XMFLOAT4 lightColor[2];
+
 	XMFLOAT4 pointlightPos;
 	XMFLOAT4 pointlightColor;
+	
+	XMFLOAT4 spotlightPos;
+	XMFLOAT4 spotlightConeDir;
+	XMFLOAT4 spotlightColor;
 };
 
 struct CameraConstantBuffer
@@ -63,6 +68,8 @@ class LetsDrawSomeStuff
 	
 	Mesh grid;
 	Mesh hammer;
+	Mesh blaster;
+	Mesh smg;
 	Mesh livingroom;
 
 	Camera mainCamera;
@@ -86,7 +93,7 @@ public:
 
 	void ManageUserInput();
 
-	void UpdateProjection(GW::SYSTEM::GWindow* attatchPoint);
+	void UpdateProjection();
 };
 
 // Init
@@ -119,23 +126,30 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			#pragma region Meshes
 
+			XMFLOAT4X4 tempWorldMatrix;
+
 			//Grid
 			grid.InitializeAs3DGrid(myDevice);
-			XMFLOAT4X4 gridWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,4.5f,0));
-			grid.SetWorldMatrix(gridWorldMatrix);
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,4.5f,0));
+			grid.SetWorldMatrix(tempWorldMatrix);
 
 
 			//Mjölnir
-			XMFLOAT4X4 hammerWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,1.5f,0));
-			hammer.SetWorldMatrix(hammerWorldMatrix);
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,1.5f,0));
+			hammer.SetWorldMatrix(tempWorldMatrix);
 			hammer.LoadMeshFromHeader(myDevice, ThorHammer_data, 884, ThorHammer_indicies , 1788);
 			hammer.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/HammerTexture.dds");
 
 			//Livingroom
-			XMFLOAT4X4 livingroomWorldMatrix = MatrixStorage(XMMatrixIdentity());
-			livingroom.SetWorldMatrix(livingroomWorldMatrix);
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity());
+			livingroom.SetWorldMatrix(tempWorldMatrix);
 			livingroom.LoadMeshFromHeader(myDevice, LivingRoom_data, 30224, LivingRoom_indicies, 31140);
 
+			//Blaster
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(-5, 5, 0) * XMMatrixScaling(.1f,.1f,.1f));
+			blaster.SetWorldMatrix(tempWorldMatrix);
+			blaster.LoadMeshFromHeader(myDevice, DC_15_Blaster_data, 23471, DC_15_Blaster_indicies, 24375);
+				
 			#pragma endregion 
 			
 
@@ -271,14 +285,18 @@ void LetsDrawSomeStuff::Render()
 			lcb.lightDirection[0] = XMFLOAT4(0.577f, -0.6f, 0.577f, 1.0f);
 			lcb.lightDirection[1] = XMFLOAT4(0, 0, 1, 1.0f);
 			lcb.lightColor[0] = XMFLOAT4(0.5f, 0.5f, 0.5f, 0.1f);
-			lcb.pointlightPos = XMFLOAT4(-7, 2.2f, 2, 1);
-			lcb.pointlightColor = XMFLOAT4(1, 0, 0, 1);
-
 
 			if(turnOnSecondLight)
 				lcb.lightColor[1] = XMFLOAT4(0.2f, 0.1f, 0.8f, 0.1f);
 			else
-				lcb.lightColor[1] = XMFLOAT4(0,0,0,0);
+				lcb.lightColor[1] = XMFLOAT4(0, 0, 0, 0);
+
+			lcb.pointlightPos = XMFLOAT4(-7, 4, 2, 1);
+			lcb.pointlightColor = XMFLOAT4(1, 0, 0, 1);
+
+			lcb.spotlightPos = XMFLOAT4(-8.4f, 4.7f, 6.15f, 1);
+			lcb.spotlightConeDir = XMFLOAT4(0, -1, 0, 1);
+			lcb.spotlightColor = XMFLOAT4(1, 1, 0, 1);
 
 			lcb.lightDirection[1] = VectorStorage(XMVector3Rotate(VectorRegister(lcb.lightDirection[1]), XMQuaternionRotationMatrix(XMMatrixRotationY((float)timer.TotalTime() * 2))));
 
@@ -293,10 +311,10 @@ void LetsDrawSomeStuff::Render()
 			MeshConstantBuffer mcb = {  };
 			mcb.worldMatrix = hammer.GetWorldMatrix();
 			mcb.enableTexture = 1;
-			mcb.time = timer.TotalTime();
+			mcb.time = (float)timer.TotalTime();
 			mcb.dir = gridDirection;
 
-			gridTimer += timer.Delta();
+			gridTimer += (float)timer.Delta();
 			
 			if(gridTimer > 1)
 			{
@@ -334,13 +352,13 @@ void LetsDrawSomeStuff::Render()
 			// Third Mjolnir
 			lightMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(.2f, .2f, .2f));
 
-			lightMatrix._41 = lcb.pointlightPos.x;
-			lightMatrix._42 = lcb.pointlightPos.y;
-			lightMatrix._43 = lcb.pointlightPos.z;
+			lightMatrix._41 = lcb.spotlightPos.x;
+			lightMatrix._42 = lcb.spotlightPos.y;
+			lightMatrix._43 = lcb.spotlightPos.z;
 
 			data = { 0 };
 			mcb.enableTexture = 0;
-			mcb.color = XMFLOAT4(0.5f, 0, 0, 1);
+			mcb.color = XMFLOAT4(0, 1, 1, 1);
 			mcb.worldMatrix = lightMatrix;
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
@@ -348,7 +366,21 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
+
 			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			//Blaster 
+			data = { 0 };
+			mcb.enableTexture = 0;
+			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1);
+			mcb.worldMatrix = blaster.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
+
+			blaster.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			//Grid
 			mcb.color = XMFLOAT4(0.0f,1.0f,0.0f, 0.5f);
@@ -382,7 +414,7 @@ void LetsDrawSomeStuff::Render()
 
 void LetsDrawSomeStuff::ManageUserInput()
 {
-	float delta = (float)timer.Delta() * 1.5f;
+	float delta = (float)timer.Delta();
 	
 	if(GetAsyncKeyState('I') & 0x1)
 	{
@@ -392,37 +424,37 @@ void LetsDrawSomeStuff::ManageUserInput()
 	//Camera Movement
 	if(GetAsyncKeyState('W'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * 2) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * 3.5f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('A'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * 2, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * 3.5f, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('S'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * 2) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * 3.5f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('D'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * 2, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * 3.5f, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_SPACE))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, delta * 2, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, delta * 3.5f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_LCONTROL))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, -delta * 2, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, -delta * 3.5f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
@@ -496,13 +528,70 @@ void LetsDrawSomeStuff::ManageUserInput()
 		updateCameraBuffer = true;
 	}
 
+	//Zoom level
+	if(GetAsyncKeyState('Z') )
+	{
+		if(mainCamera.FOV > 20)
+		{
+			mainCamera.FOV -= (delta * 30);
+			UpdateProjection();
+		}
+	}
 
+	if(GetAsyncKeyState('X'))
+	{
+		if(mainCamera.FOV < 120)
+		{
+			mainCamera.FOV += (delta * 30);
+			UpdateProjection();
+		}
+
+	}
+
+	//Near Plane
+	if(GetAsyncKeyState(VK_NUMPAD4))
+	{
+		if(mainCamera.nearPlane < 20)
+		{
+			mainCamera.nearPlane += delta * 10;
+			UpdateProjection();
+		}
+	}
+
+	if(GetAsyncKeyState(VK_NUMPAD1))
+	{
+		if(mainCamera.nearPlane > 0.1f)
+		{
+			mainCamera.nearPlane -= delta * 10;
+			UpdateProjection();
+		}
+	}
+
+	//Far Plane
+	if(GetAsyncKeyState(VK_NUMPAD6))
+	{
+		if(mainCamera.farPlane < 500)
+		{
+			mainCamera.farPlane += delta * 10;
+			UpdateProjection();
+		}
+	}
+
+	if(GetAsyncKeyState(VK_NUMPAD3))
+	{
+		if(mainCamera.farPlane > 25)
+		{
+			mainCamera.farPlane -= delta * 10;
+			UpdateProjection();
+		}
+
+	}
 }
 
-void LetsDrawSomeStuff::UpdateProjection(GW::SYSTEM::GWindow* attatchPoint)
+void LetsDrawSomeStuff::UpdateProjection()
 {
 	float aspectRatio;
 	mySurface->GetAspectRatio(aspectRatio);
-	mainCamera.mProjMatrix = MatrixStorage(XMMatrixPerspectiveFovLH(65, aspectRatio, .1f, 10000));
+	mainCamera.mProjMatrix = MatrixStorage(XMMatrixPerspectiveFovLH(XMConvertToRadians(mainCamera.FOV), aspectRatio, mainCamera.nearPlane, mainCamera.farPlane));
 	updateCameraBuffer = true;
 }

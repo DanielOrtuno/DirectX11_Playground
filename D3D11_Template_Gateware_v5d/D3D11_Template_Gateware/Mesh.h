@@ -4,6 +4,7 @@
 #include <d3dcompiler.h>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include "DDSTextureLoader.h"
 
 using namespace DirectX;
@@ -14,6 +15,14 @@ struct VERTEX
 	XMFLOAT4 pos;
 	XMFLOAT3 uv;
 	XMFLOAT3 normal;
+
+	bool operator==(VERTEX _vertex)
+	{
+	/*	for(int i = 0; i < length; i++)
+		{
+
+		}*/
+	}
 };
 
 
@@ -44,7 +53,7 @@ public:
 
 	void InitializeAs3DGrid(ID3D11Device* device);
 
-	int LoadMeshFromFile(ID3D11Device* device, const wchar_t filename[]);
+	int LoadMeshFromFile(ID3D11Device* device, const char filename[]);
 
 	void LoadMeshFromHeader(ID3D11Device* device, const _OBJ_VERT_* vertArray, int vertexCount, const unsigned int* indexArray, int indexCount);
 

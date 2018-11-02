@@ -17,6 +17,8 @@
 #include "../G_System/GKeyDefines.h"
 
 //! The core namespace to which all Gateware interfaces/structures/defines must belong.
+
+
 namespace GW
 {
 	//! The namespace to which all Gateware library interfaces must belong.
@@ -73,10 +75,12 @@ namespace GW
 		*	window as well. The window is also a broadcaster, meaning
 		*	a GListener can be written to receive events from it.
 		*/
+
 		class GWindow : public CORE::GBroadcasting 
 		{
 
 		public:
+			
 			
 			//! Initializes a window handle and displays a window.
 			/*!

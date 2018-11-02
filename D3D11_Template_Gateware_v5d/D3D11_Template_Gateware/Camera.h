@@ -18,6 +18,10 @@ public:
 	XMFLOAT4X4 mViewMatrix;
 	XMFLOAT4X4 mProjMatrix;
 
+	float FOV;
+	float nearPlane;
+	float farPlane;
+
 	Camera();
 
 	void InitializeCamera(float aspectRatio);
