@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include "DDSTextureLoader.h"
+#include <algorithm>
 
 using namespace DirectX;
 
@@ -16,15 +17,33 @@ struct VERTEX
 	XMFLOAT3 uv;
 	XMFLOAT3 normal;
 
-	bool operator==(VERTEX _vertex)
-	{
-	/*	for(int i = 0; i < length; i++)
-		{
 
-		}*/
+	bool operator==(const VERTEX& v) const
+	{
+		if(this->pos.x != v.pos.x || this->pos.y != v.pos.y || this->pos.z != v.pos.z || this->pos.w != v.pos.w)
+			return false;
+
+		if(this->uv.x != v.uv.x || this->uv.y != v.uv.y || this->uv.z != v.uv.z)
+			return false;
+
+		if(this->normal.x != v.normal.x || this->normal.y != v.normal.y || this->normal.z != v.normal.z)
+			return false;
+
+		return true;
 	}
 };
 
+struct hashFct_VERTEX
+{
+	size_t operator() (const VERTEX& v) const
+	{
+		size_t pos = std::hash<float>()( v.pos.x ) ^ std::hash<float>()( v.pos.y ) ^ std::hash<float>()( v.pos.z ) ^ std::hash<float>()( v.pos.w );
+		size_t uv = std::hash<float>()( v.uv.x ) ^ std::hash<float>()( v.uv.y ) ^ std::hash<float>()( v.uv.z );
+		size_t norm = std::hash<float>()( v.normal.x ) ^ std::hash<float>()( v.normal.y ) ^ std::hash<float>()( v.normal.z );
+
+		return pos ^ uv ^ norm;
+	}
+};
 
 class Mesh
 {
@@ -42,6 +61,9 @@ private:
 	int		/*This is an integer */		mNumVertices;
 	int									mNumIndices;
 
+
+	void CreateBuffers(ID3D11Device* device);
+
 public:
 	CComPtr<ID3D11SamplerState>			m_pSamplerState;
 
@@ -49,7 +71,7 @@ public:
 
 	void MakePyramid(ID3D11Device* device);
 
-	int InitializeAsCube(ID3D11Device* device);
+	int CreateSkybox(ID3D11Device* device);
 
 	void InitializeAs3DGrid(ID3D11Device* device);
 

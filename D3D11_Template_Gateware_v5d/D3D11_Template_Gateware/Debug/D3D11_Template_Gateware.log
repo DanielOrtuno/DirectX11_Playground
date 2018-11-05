@@ -1,7 +1,2 @@
-﻿C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\D3D11_Template_Gateware\BasicPixelShader.hlsl(53,8-61): warning X3206: implicit truncation of vector type
-C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\D3D11_Template_Gateware\BasicPixelShader.hlsl(55,39-57): warning X3206: implicit truncation of vector type
-  
-  compilation header save succeeded; see C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\D3D11_Template_Gateware\BasicPixelShader.csh
-  compilation object save succeeded; see C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\Debug\BasicPixelShader.cso
-  main.cpp
+﻿  Mesh.cpp
   D3D11_Template_Gateware.vcxproj -> C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\Debug\D3D11_Template_Gateware.exe

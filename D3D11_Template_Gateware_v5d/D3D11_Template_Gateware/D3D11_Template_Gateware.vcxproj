@@ -150,6 +150,7 @@
     <ClInclude Include="LetsDrawSomeStuff.h" />
     <ClInclude Include="LivingRoom.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Models\TestCube.h" />
     <ClInclude Include="ThorHammer.h" />
     <ClInclude Include="XTime.h" />
   </ItemGroup>

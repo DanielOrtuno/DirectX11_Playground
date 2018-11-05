@@ -3,9 +3,9 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include <atlcomcli.h>
-#include "ThorHammer.h" 
-#include "LivingRoom.h"
-#include "DC-15_Blaster.h"
+#include "../D3D11_Template_Gateware/Models/ThorHammer.h" 
+#include "../D3D11_Template_Gateware/Models/LivingRoom.h"
+#include "../D3D11_Template_Gateware/Models/DC-15_Blaster.h"
 
 using namespace DirectX;
 

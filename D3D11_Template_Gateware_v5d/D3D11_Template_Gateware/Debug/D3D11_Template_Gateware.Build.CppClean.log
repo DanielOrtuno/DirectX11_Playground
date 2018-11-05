@@ -17,10 +17,14 @@ c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\debug\gdirectx11surface.obj
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\debug\gaudio.obj
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\debug\camera.obj
-c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\basicpixelshader.csh
-c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\basicpixelshader.cso
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\debug\xtime.obj
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\debug\ddstextureloader.obj
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\basicvertexshader.csh
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\basicvertexshader.cso
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\gridvertexshader.csh
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\gridvertexshader.cso
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\basicpixelshader.csh
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\basicpixelshader.cso
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\d3d11_template_gateware.exe
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\d3d11_template_gateware.ilk
 c:\school\graphicsii_project\d3d11_template_gateware_v5d\debug\d3d11_template_gateware.pdb

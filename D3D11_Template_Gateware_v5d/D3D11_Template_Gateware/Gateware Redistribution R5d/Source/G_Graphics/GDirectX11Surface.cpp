@@ -44,6 +44,7 @@ public:
 	GDirectX11();
 	virtual ~GDirectX11();
 	void	SetGWindow(GWindow* _window);
+
 	GReturn Initialize(unsigned long long _initMask);
 	GReturn	GetAspectRatio(float& _outRatio);
 
@@ -58,6 +59,9 @@ public:
 	GReturn DecrementCount();
 	GReturn RequestInterface(const GUUIID& _interfaceID, void** _outputInterface);
 	GReturn OnEvent(const GUUIID& _senderInerface, unsigned int _eventID, void* _eventData, unsigned int _dataSize);
+
+	// Why am I touching this?
+	HWND GetSurfaceWindow();
 };
 
 GDirectX11::GDirectX11()
@@ -506,4 +510,10 @@ GReturn GW::GRAPHICS::CreateGDirectX11Surface(SYSTEM::GWindow* _gWin, unsigned l
 	*_outSurface = Surface;
 
 	return SUCCESS;
+}
+
+
+HWND GDirectX11::GetSurfaceWindow()
+{
+	return surfaceWindow;
 }

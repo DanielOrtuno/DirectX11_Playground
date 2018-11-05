@@ -71,6 +71,7 @@ class LetsDrawSomeStuff
 	Mesh blaster;
 	Mesh smg;
 	Mesh livingroom;
+	Mesh skybox;
 
 	Camera mainCamera;
 
@@ -137,11 +138,12 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//Mjölnir
 			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,1.5f,0));
 			hammer.SetWorldMatrix(tempWorldMatrix);
-			hammer.LoadMeshFromHeader(myDevice, ThorHammer_data, 884, ThorHammer_indicies , 1788);
+			//hammer.LoadMeshFromHeader(myDevice, ThorHammer_data, 884, ThorHammer_indicies , 1788);
 			hammer.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/HammerTexture.dds");
+			hammer.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/ThorHammer.obj");
 
 			//Livingroom
-			tempWorldMatrix = MatrixStorage(XMMatrixIdentity());
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() );
 			livingroom.SetWorldMatrix(tempWorldMatrix);
 			livingroom.LoadMeshFromHeader(myDevice, LivingRoom_data, 30224, LivingRoom_indicies, 31140);
 
@@ -149,7 +151,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(-5, 5, 0) * XMMatrixScaling(.1f,.1f,.1f));
 			blaster.SetWorldMatrix(tempWorldMatrix);
 			blaster.LoadMeshFromHeader(myDevice, DC_15_Blaster_data, 23471, DC_15_Blaster_indicies, 24375);
-				
+			//blaster.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/DC-15_Blaster.obj");
+
+			//Skybox
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(10,10,10));
+			skybox.SetWorldMatrix(tempWorldMatrix);
+			//skybox.CreateSkybox(myDevice);
+			skybox.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/SkyboxTest.obj");
 			#pragma endregion 
 			
 
@@ -382,6 +390,19 @@ void LetsDrawSomeStuff::Render()
 
 			blaster.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+			//Skybox
+			data = { 0 };
+			mcb.enableTexture = 0;
+			mcb.color = XMFLOAT4(1, 1, 1, 1);
+			mcb.worldMatrix = skybox.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
+
+			skybox.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 			//Grid
 			mcb.color = XMFLOAT4(0.0f,1.0f,0.0f, 0.5f);
 			mcb.worldMatrix = grid.GetWorldMatrix();
@@ -424,37 +445,84 @@ void LetsDrawSomeStuff::ManageUserInput()
 	//Camera Movement
 	if(GetAsyncKeyState('W'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * 3.5f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * 5) * MatrixRegister(mainCamera.mViewMatrix));
+
+		XMVECTOR camPos = XMVectorZero();
+		XMVECTOR camRot = XMVectorZero();
+		XMVECTOR camScale = XMVectorZero();
+		XMMatrixDecompose(&camScale, &camRot, &camPos, MatrixRegister(mainCamera.mViewMatrix));
+
+		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
+
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('A'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * 3.5f, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * 5, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+	
+		XMVECTOR camPos = XMVectorZero();
+		XMVECTOR camRot = XMVectorZero();
+		XMVECTOR camScale = XMVectorZero();
+		XMMatrixDecompose(&camScale, &camRot, &camPos, MatrixRegister(mainCamera.mViewMatrix));
+
+		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
+
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('S'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * 3.5f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * 5) * MatrixRegister(mainCamera.mViewMatrix));
+
+		XMVECTOR camPos = XMVectorZero();
+		XMVECTOR camRot = XMVectorZero();
+		XMVECTOR camScale = XMVectorZero(); 
+		XMMatrixDecompose(&camScale, &camRot, &camPos, MatrixRegister(mainCamera.mViewMatrix));
+
+		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
+
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState('D'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * 3.5f, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * 5, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
+		
+		XMVECTOR camPos = XMVectorZero();
+		XMVECTOR camRot = XMVectorZero();
+		XMVECTOR camScale = XMVectorZero();	
+		XMMatrixDecompose(&camScale, &camRot, &camPos, MatrixRegister(mainCamera.mViewMatrix));
+
+		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
+
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_SPACE))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, delta * 3.5f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, delta * 5, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		
+		XMVECTOR camPos = XMVectorZero();
+		XMVECTOR camRot = XMVectorZero();
+		XMVECTOR camScale = XMVectorZero();
+		XMMatrixDecompose(&camScale, &camRot, &camPos, MatrixRegister(mainCamera.mViewMatrix));
+
+		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
+
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_LCONTROL))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0.0f, -delta * 3.5f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, -delta * 5, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		
+		XMVECTOR camPos = XMVectorZero();
+		XMVECTOR camRot = XMVectorZero();
+		XMVECTOR camScale = XMVectorZero();
+		XMMatrixDecompose(&camScale, &camRot, &camPos, MatrixRegister(mainCamera.mViewMatrix));
+
+		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
 		updateCameraBuffer = true;
 	}
 
@@ -556,6 +624,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 			mainCamera.nearPlane += delta * 10;
 			UpdateProjection();
 		}
+
 	}
 
 	if(GetAsyncKeyState(VK_NUMPAD1))
@@ -585,6 +654,27 @@ void LetsDrawSomeStuff::ManageUserInput()
 			UpdateProjection();
 		}
 
+	}
+
+	//Reset camera 
+	if(GetAsyncKeyState('R'))
+	{
+		float aspectRatio;
+		mySurface->GetAspectRatio(aspectRatio);
+
+		mainCamera.InitializeCamera(aspectRatio);
+
+		updateCameraBuffer = true;
+	}
+
+	//Mouse input?
+	POINT mousePos;
+	
+	if(GetCursorPos(&mousePos))
+	{
+//B		ScreenToClient(mySurface->GetSurfaceWindow(), &mousePos);
+
+		
 	}
 }
 
