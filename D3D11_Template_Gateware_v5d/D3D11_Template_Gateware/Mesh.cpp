@@ -72,40 +72,11 @@ void Mesh::MakePyramid(ID3D11Device* device)
 
 }
 
-int Mesh::CreateSkybox(ID3D11Device* device)
+int Mesh::CreateSkybox(ID3D11Device* device, ID3D11DeviceContext* context,const char boxpath[], const wchar_t texturePath[])
 {
-	mNumVertices = 8;
-	mNumIndices = 36;
-	m_pVertices = new VERTEX[mNumVertices];
-	m_pIndices = new int[mNumIndices];
-	int vertexIndex = 0;
+	LoadMeshFromFile(device, boxpath);
 
-	for(int i = -1; i <= 1; i+= 2)
-	{
-		m_pVertices[vertexIndex++] = VERTEX{ XMFLOAT4{ -1, -1, (float)i,  1 } }; //bottom left
-		m_pVertices[vertexIndex++] = VERTEX{ XMFLOAT4{ -1,  1, (float)i,  1 } }; //top left
-		m_pVertices[vertexIndex++] = VERTEX{ XMFLOAT4{  1,  1, (float)i,  1 } }; //top right
-		m_pVertices[vertexIndex++] = VERTEX{ XMFLOAT4{  1, -1, (float)i,  1 } }; //bottom right
-	}
-	
-	/*m_pIndices[2], m_pIndices[5], m_pIndices[21], m_pIndices[32], m_pIndices[35] = 0;
-
-	m_pIndices[1], m_pIndices[18], m_pIndices[22], m_pIndices[26], m_pIndices[29] = 1;
-
-	m_pIndices[0], m_pIndices[4], m_pIndices[7], m_pIndices[23], m_pIndices[27] = 2;
-
-	m_pIndices[3], m_pIndices[8], m_pIndices[11], m_pIndices[33] = 3;
-
-	m_pIndices[15], m_pIndices[20], m_pIndices[31] = 4;
-
-	m_pIndices[12], m_pIndices[16], m_pIndices[25] = 5;
-
-	m_pIndices[6], m_pIndices[10], m_pIndices[13], m_pIndices[19], m_pIndices[24], m_pIndices[28] = 6;
-
-	m_pIndices[9], m_pIndices[14], m_pIndices[17], m_pIndices[30], m_pIndices[34] = 7;*/
-
-
-	CreateBuffers(device);
+	CreateDDSTextureFromFileEx(device, context, texturePath, 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, D3D11_RESOURCE_MISC_TEXTURECUBE, false, (ID3D11Resource**)&m_pDiffuseMap.p, &m_pSRV.p);
 
 	return 0;
 }

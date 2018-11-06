@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "DDSTextureLoader.h"
 #include <algorithm>
+#include <d3d11.h>
 
 using namespace DirectX;
 
@@ -71,7 +72,8 @@ public:
 
 	void MakePyramid(ID3D11Device* device);
 
-	int CreateSkybox(ID3D11Device* device);
+	int CreateSkybox(ID3D11Device* device, ID3D11DeviceContext* context, const char boxpath[],const wchar_t texturePath[]);
+
 
 	void InitializeAs3DGrid(ID3D11Device* device);
 
