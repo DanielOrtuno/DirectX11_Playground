@@ -11,6 +11,8 @@
 #include "BasicVertexShader.csh"
 #include "BasicPixelShader.csh"
 #include "GridVertexShader.csh"
+#include "SkyboxVS.csh"
+#include "SkyboxPS.csh"
 
 // Simple Container class to make life easier/cleaner
 using namespace DirectX;
@@ -56,9 +58,11 @@ class LetsDrawSomeStuff
 	ID3D11DeviceContext *myContext = nullptr;
 
 	// TODO: Add your own D3D11 variables here (be sure to "Release()" them when done!)
-	CComPtr<ID3D11PixelShader> pixelShader = nullptr;
-	CComPtr<ID3D11VertexShader> vertexShader = nullptr;
-	CComPtr<ID3D11VertexShader> gridShader = nullptr;
+	CComPtr<ID3D11PixelShader> basicPS = nullptr;
+	CComPtr<ID3D11VertexShader> basicVS = nullptr;
+	CComPtr<ID3D11VertexShader> gridVS = nullptr;
+	CComPtr<ID3D11VertexShader> skyboxVS = nullptr;
+	CComPtr<ID3D11PixelShader> skyboxPS = nullptr;
 	CComPtr<ID3D11InputLayout> inputLayout = nullptr;
 
 	CComPtr<ID3D11Buffer> cameraConstBuff = nullptr;
@@ -142,6 +146,11 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			hammer.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/HammerTexture.dds");
 			hammer.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/ThorHammer.obj");
 
+			//Skybox
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(5, 5, 5));
+			skybox.SetWorldMatrix(tempWorldMatrix);
+			skybox.CreateSkybox(myDevice, myContext, "../D3D11_Template_Gateware/Models/SkyboxTest.obj", L"../D3D11_Template_Gateware/Models/OutputCube.dds");
+
 			//Livingroom
 			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() );
 			livingroom.SetWorldMatrix(tempWorldMatrix);
@@ -153,11 +162,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			blaster.LoadMeshFromHeader(myDevice, DC_15_Blaster_data, 23471, DC_15_Blaster_indicies, 24375);
 			//blaster.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/DC-15_Blaster.obj");
 
-			//Skybox
-			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(10,10,10));
-			skybox.SetWorldMatrix(tempWorldMatrix);
-			//skybox.CreateSkybox(myDevice);
-			skybox.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/SkyboxTest.obj");
+			
+			
 			#pragma endregion 
 			
 
@@ -175,14 +181,18 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			
 			myDevice->CreateSamplerState(&desc, &hammer.m_pSamplerState.p);
 
+
+			myDevice->CreateSamplerState(&desc, &skybox.m_pSamplerState.p);
 			#pragma endregion
 
 
 			#pragma region Shaders
 
-			myDevice->CreateVertexShader(BasicVertexShader, sizeof(BasicVertexShader), nullptr, &vertexShader.p);
-			myDevice->CreatePixelShader(BasicPixelShader, sizeof(BasicPixelShader), nullptr, &pixelShader.p);
-			myDevice->CreateVertexShader(GridVertexShader, sizeof(GridVertexShader), nullptr, &gridShader.p);
+			myDevice->CreateVertexShader(BasicVertexShader, sizeof(BasicVertexShader), nullptr, &basicVS.p);
+			myDevice->CreatePixelShader(BasicPixelShader, sizeof(BasicPixelShader), nullptr, &basicPS.p);
+			myDevice->CreateVertexShader(GridVertexShader, sizeof(GridVertexShader), nullptr, &gridVS.p);
+			myDevice->CreateVertexShader(SkyboxVS, sizeof(SkyboxVS), nullptr, &skyboxVS.p);
+			myDevice->CreatePixelShader(SkyboxPS, sizeof(SkyboxPS), nullptr, &skyboxPS.p);
 
 			#pragma endregion
 
@@ -314,9 +324,9 @@ void LetsDrawSomeStuff::Render()
 			myContext->Unmap(lightConstBuff, 0);
 			
 			myContext->PSSetConstantBuffers(0, 1, &lightConstBuff.p);
+			MeshConstantBuffer mcb = {  };
 
 			//Mjölnir 
-			MeshConstantBuffer mcb = {  };
 			mcb.worldMatrix = hammer.GetWorldMatrix();
 			mcb.enableTexture = 1;
 			mcb.time = (float)timer.TotalTime();
@@ -337,7 +347,7 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
-			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			hammer.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
 			XMVECTOR lightPosition = VectorRegister(lcb.lightDirection[1]);
 			lightPosition *= VectorRegister(XMFLOAT4(3,1,3,1));
@@ -355,7 +365,7 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
-			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			hammer.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			// Third Mjolnir
 			lightMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(.2f, .2f, .2f));
@@ -374,8 +384,7 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
-
-			hammer.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			hammer.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			//Blaster 
 			data = { 0 };
@@ -388,9 +397,30 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
-			blaster.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			blaster.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			//Skybox
+			//Livingroom
+			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+			mcb.worldMatrix = livingroom.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+			
+
+			livingroom.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+			//Grid
+			mcb.color = XMFLOAT4(0.0f, 1.0f, 0.0f, 0.5f);
+			mcb.worldMatrix = grid.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			grid.TestGrid(myContext, gridVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+
+			// Skybox
 			data = { 0 };
 			mcb.enableTexture = 0;
 			mcb.color = XMFLOAT4(1, 1, 1, 1);
@@ -401,26 +431,8 @@ void LetsDrawSomeStuff::Render()
 
 			myContext->VSSetConstantBuffers(1, 1, &meshConstBuff.p);
 
-			skybox.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			skybox.RenderMesh(myContext, skyboxVS.p, skyboxPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			//Grid
-			mcb.color = XMFLOAT4(0.0f,1.0f,0.0f, 0.5f);
-			mcb.worldMatrix = grid.GetWorldMatrix();
-			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
-			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
-			myContext->Unmap(meshConstBuff, 0);
-
-			grid.TestGrid(myContext, gridShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-
-			//Livingroom
-			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-			mcb.worldMatrix = livingroom.GetWorldMatrix();
-			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
-			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
-			myContext->Unmap(meshConstBuff, 0);
-			
-
-			livingroom.RenderMesh(myContext, vertexShader.p, pixelShader.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			// Present Backbuffer using Swapchain object
 			// Framerate is currently unlocked, we suggest "MSI Afterburner" to track your current FPS and memory usage.
@@ -621,17 +633,19 @@ void LetsDrawSomeStuff::ManageUserInput()
 	{
 		if(mainCamera.nearPlane < 20)
 		{
-			mainCamera.nearPlane += delta * 10;
+			mainCamera.nearPlane += delta * 15;
 			UpdateProjection();
 		}
 
 	}
+	
+	std::cout << mainCamera.farPlane << std::endl;
 
 	if(GetAsyncKeyState(VK_NUMPAD1))
 	{
 		if(mainCamera.nearPlane > 0.1f)
 		{
-			mainCamera.nearPlane -= delta * 10;
+			mainCamera.nearPlane -= delta * 15;
 			UpdateProjection();
 		}
 	}
@@ -641,7 +655,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 	{
 		if(mainCamera.farPlane < 500)
 		{
-			mainCamera.farPlane += delta * 10;
+			mainCamera.farPlane += delta * 15;
 			UpdateProjection();
 		}
 	}
@@ -650,7 +664,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 	{
 		if(mainCamera.farPlane > 25)
 		{
-			mainCamera.farPlane -= delta * 10;
+			mainCamera.farPlane -= delta * 15;
 			UpdateProjection();
 		}
 

@@ -64,19 +64,19 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ThorHammer.h">
-      <Filter>Models</Filter>
+      <Filter>Shaders\Models</Filter>
     </ClInclude>
     <ClInclude Include="DDSTextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LivingRoom.h">
-      <Filter>Models</Filter>
+      <Filter>Shaders\Models</Filter>
     </ClInclude>
     <ClInclude Include="DC-15_Blaster.h">
-      <Filter>Models</Filter>
+      <Filter>Shaders\Models</Filter>
     </ClInclude>
     <ClInclude Include="Models\TestCube.h">
-      <Filter>Models</Filter>
+      <Filter>Shaders\Models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -89,7 +89,7 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{d3efabad-8325-473a-8561-d74a716b4b09}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Models">
+    <Filter Include="Shaders\Models">
       <UniqueIdentifier>{e33896c7-6693-407e-aa01-4fc82d31fc9d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -101,6 +101,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="GridVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyboxVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyboxPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
