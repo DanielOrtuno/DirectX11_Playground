@@ -7,3 +7,11 @@ LeftControl = move down
 arrow keys = rotate x and y
 
 left/right shift = rotate z
+
+I = Turn of rotating light
+
+Z/X = Zoom in and out
+
+NUMPAD 1/ NUMPAD 4 = Near clip controls 
+
+NUMPAD 3/ NUMPAD 6 = Far clip controls

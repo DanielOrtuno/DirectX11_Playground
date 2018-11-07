@@ -685,10 +685,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 	POINT mousePos;
 	
 	if(GetCursorPos(&mousePos))
-	{
-//B		ScreenToClient(mySurface->GetSurfaceWindow(), &mousePos);
-
-		
+	{	
 	}
 }
 
