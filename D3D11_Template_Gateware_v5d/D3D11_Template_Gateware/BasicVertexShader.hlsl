@@ -49,7 +49,7 @@ OUTPUT main(VERTEX input)
 	if(enableTexture)
 		output.color.xyz = input.uv;
 	else
-		output.color = color;
+		output.color = color.xyzw;
 
 	output.useTexture = enableTexture;
 

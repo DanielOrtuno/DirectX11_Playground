@@ -36,7 +36,7 @@ float4 main(OUTPUT input) : SV_TARGET
 
 	float lightRatio;
 
-	//Directional lights
+	////Directional lights
 	for(int i = 0; i < 2; i++)
 	{
 		lightRatio = clamp(dot(-normalize(lightDirection[i].xyz), input.normal), 0, 1);
@@ -45,7 +45,7 @@ float4 main(OUTPUT input) : SV_TARGET
 		finalColor += lightRatio * lightColor[i] * val;
 	}
 
-	//Point light
+	////Point light
 
 	float4 toLight = pointlightPos - input.worldPos;
 	float3 lightLength = length(toLight);
@@ -56,22 +56,14 @@ float4 main(OUTPUT input) : SV_TARGET
 
 	finalColor += pointlightColor * rangeAttenuation * angularAttenuation;
 
-	//Spotlight 
-	//LIGHTDIR = NORMALIZE(LIGHTPOS – SURFACEPOS) )
-	//SURFACERATIO = CLAMP(DOT(-LIGHTDIR, CONEDIR))
-	//SPOTFACTOR = ( SURFACERATIO > CONERATIO ) ? 1 : 0
-	//LIGHTRATIO = CLAMP(DOT(LIGHTDIR, SURFACENORMAL))
-	//RESULT = SPOTFACTOR * LIGHTRATIO * LIGHTCOLOR * SURFACECOLOR
-	float spotlightRatio = 2;
+	////Spotlight 
 
-	float4 spotlightDir = spotlightPos - input.pos;
+	float spotlightOuterRatio = .85f;
+	float spotlightInnerRatio = .99f;
+
+	float4 spotlightDir = normalize(spotlightPos - input.worldPos);
 	float surfaceRatio = saturate(dot(-spotlightDir, spotlightConeDir));
-	float spotFactor;
-
-	if(surfaceRatio > spotlightRatio)
-		spotFactor = 1;
-	else
-		spotFactor = 0;
+	float spotFactor = saturate(( surfaceRatio - spotlightOuterRatio ) / ( spotlightInnerRatio - spotlightOuterRatio ));
 
 	lightRatio = saturate(dot(spotlightDir.xyz, input.normal));
 

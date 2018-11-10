@@ -18,7 +18,6 @@ struct VERTEX
 	XMFLOAT3 uv;
 	XMFLOAT3 normal;
 
-
 	bool operator==(const VERTEX& v) const
 	{
 		if(this->pos.x != v.pos.x || this->pos.y != v.pos.y || this->pos.z != v.pos.z || this->pos.w != v.pos.w)
@@ -56,6 +55,7 @@ private:
 	CComPtr<ID3D11Texture2D>			m_pDiffuseMap;
 	CComPtr<ID3D11ShaderResourceView>	m_pSRV;
 
+
 	VERTEX*								m_pVertices;
 	int*								m_pIndices;
 
@@ -66,6 +66,9 @@ private:
 	void CreateBuffers(ID3D11Device* device);
 
 public:
+	XMFLOAT4 baseColor;
+
+	
 	CComPtr<ID3D11SamplerState>			m_pSamplerState;
 
 	Mesh();
@@ -77,7 +80,7 @@ public:
 
 	void InitializeAs3DGrid(ID3D11Device* device);
 
-	int LoadMeshFromFile(ID3D11Device* device, const char filename[]);
+	int LoadMeshFromFile(ID3D11Device* device, const char filename[], bool flipV);
 
 	void LoadMeshFromHeader(ID3D11Device* device, const _OBJ_VERT_* vertArray, int vertexCount, const unsigned int* indexArray, int indexCount);
 
@@ -107,6 +110,7 @@ public:
 
 		context->Draw(mNumVertices, 0);
 	}
+
 
 	~Mesh();
 };

@@ -2,7 +2,7 @@
 #pragma once
 // Include our DX11 middle ware
 #include "Gateware Redistribution R5d/Interface/G_Graphics/GDirectX11Surface.h"
-
+#include <map>
 // Include DirectX11 for interface access
 
 #include "Mesh.h" //Mesh.h has all the includes for DirectX
@@ -69,11 +69,26 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11Buffer> meshConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> lightConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> pixelConstBuff = nullptr;
-	
+
+	CComPtr<ID3D11BlendState> blendState = nullptr;
+	CComPtr<ID3D11RasterizerState> CCWcullingMode;
+	CComPtr<ID3D11RasterizerState> CWcullingMode;
+
+	Mesh gruntTorso;
+	Mesh gruntRightSide;
+	Mesh gruntLeftSide;
+
+	Mesh spartan;
+
+	Mesh transparentGreenCube;
+	Mesh transparentRedCube;
+	Mesh transparentBlueCube;
+
+
 	Mesh grid;
 	Mesh hammer;
 	Mesh blaster;
-	Mesh smg;
+	Mesh needler;
 	Mesh livingroom;
 	Mesh skybox;
 
@@ -144,7 +159,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			hammer.SetWorldMatrix(tempWorldMatrix);
 			//hammer.LoadMeshFromHeader(myDevice, ThorHammer_data, 884, ThorHammer_indicies , 1788);
 			hammer.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/HammerTexture.dds");
-			hammer.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/ThorHammer.obj");
+			hammer.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/ThorHammer.obj", true);
 
 			//Skybox
 			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(5, 5, 5));
@@ -162,7 +177,46 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			blaster.LoadMeshFromHeader(myDevice, DC_15_Blaster_data, 23471, DC_15_Blaster_indicies, 24375);
 			//blaster.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/DC-15_Blaster.obj");
 
-			
+			//Grunt
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() *  XMMatrixRotationY(XMConvertToRadians(90)) * XMMatrixTranslation(5,0,5) );
+			gruntTorso.SetWorldMatrix(tempWorldMatrix);
+			gruntRightSide.SetWorldMatrix(tempWorldMatrix);
+			gruntLeftSide.SetWorldMatrix(tempWorldMatrix);
+
+			gruntTorso.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/GruntTorso.obj", true);
+			gruntTorso.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/GruntTorsoTexture.dds");
+
+			gruntRightSide.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/GruntRightArmLeg.obj", true);
+			gruntRightSide.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/GruntLegsArmsTexture.dds");
+
+			gruntLeftSide.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/GruntLeftArmLeg.obj", true);
+			gruntLeftSide.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/GruntLegsArmsTexture.dds");
+
+			//Spartan
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(2, 2, 0));
+			spartan.SetWorldMatrix(tempWorldMatrix);
+			spartan.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/Spartan.obj", true);
+			spartan.LoadTexture(myDevice, L"../D3D11_Template_Gateware/Models/SpartanTexture.dds");
+
+			//Transparent cubes
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0, 6, 8) * XMMatrixScaling(2.0f, 1, 0.2f));
+			transparentRedCube.SetWorldMatrix(tempWorldMatrix);
+			transparentRedCube.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/Cube.obj", true);
+			transparentRedCube.baseColor = XMFLOAT4(1, 0, 0, 1);
+
+			tempWorldMatrix = MatrixStorage(MatrixRegister(tempWorldMatrix) * XMMatrixTranslation(0, 0, 1));
+			transparentGreenCube.SetWorldMatrix(tempWorldMatrix);
+			transparentGreenCube.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/Cube.obj", true);
+			transparentGreenCube.baseColor = XMFLOAT4(0, 1, 0, 1);
+
+			tempWorldMatrix = MatrixStorage(MatrixRegister(tempWorldMatrix) * XMMatrixTranslation(0, 0, 1));
+			transparentBlueCube.SetWorldMatrix(tempWorldMatrix);
+			transparentBlueCube.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/Cube.obj", true);
+			transparentBlueCube.baseColor = XMFLOAT4(0, 0, 1, 1);
+
+			//Neddler 
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity());
+			needler.SetWorldMatrix(tempWorldMatrix);
 			
 			#pragma endregion 
 			
@@ -229,6 +283,47 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 
 			#pragma endregion
+
+
+			#pragma region  Blending
+
+			D3D11_BLEND_DESC blendDesc;
+			ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+			
+			D3D11_RENDER_TARGET_BLEND_DESC rtBlendDesc;
+			ZeroMemory(&rtBlendDesc, sizeof(rtBlendDesc));
+
+			rtBlendDesc.BlendEnable = true;
+			rtBlendDesc.SrcBlend = D3D11_BLEND_SRC_COLOR;
+			rtBlendDesc.DestBlend = D3D11_BLEND_BLEND_FACTOR;
+			rtBlendDesc.BlendOp = D3D11_BLEND_OP_ADD;
+			rtBlendDesc.SrcBlendAlpha = D3D11_BLEND_ONE;
+			rtBlendDesc.DestBlendAlpha = D3D11_BLEND_ZERO;
+			rtBlendDesc.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+			rtBlendDesc.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+
+
+			blendDesc.AlphaToCoverageEnable = false;
+			blendDesc.RenderTarget[0] = rtBlendDesc;
+
+			myDevice->CreateBlendState(&blendDesc, &blendState);
+
+
+			D3D11_RASTERIZER_DESC rastDesc;
+			ZeroMemory(&rastDesc, sizeof(rastDesc));
+
+			rastDesc.FillMode = D3D11_FILL_SOLID;
+			rastDesc.CullMode = D3D11_CULL_BACK;
+
+			rastDesc.FrontCounterClockwise = false;
+			myDevice->CreateRasterizerState(&rastDesc, &CWcullingMode.p);
+
+			rastDesc.FrontCounterClockwise = true;
+			myDevice->CreateRasterizerState(&rastDesc, &CCWcullingMode.p);
+
+
+			#pragma endregion
+			
 		}
 	}
 }
@@ -317,7 +412,8 @@ void LetsDrawSomeStuff::Render()
 			lcb.spotlightColor = XMFLOAT4(1, 1, 0, 1);
 
 			lcb.lightDirection[1] = VectorStorage(XMVector3Rotate(VectorRegister(lcb.lightDirection[1]), XMQuaternionRotationMatrix(XMMatrixRotationY((float)timer.TotalTime() * 2))));
-
+			lcb.pointlightPos = VectorStorage(XMVector3Rotate(VectorRegister(lcb.pointlightPos), XMQuaternionRotationMatrix(XMMatrixRotationY((float)timer.TotalTime() * 2))));
+			
 			data = { 0 };
 			myContext->Map(lightConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(lcb), &lcb, sizeof(lcb));
@@ -354,6 +450,27 @@ void LetsDrawSomeStuff::Render()
 
 			XMFLOAT4X4 lightMatrix = (MatrixStorage(XMMatrixScaling(.2f, .2f, .2f) * XMMatrixTranslationFromVector(-lightPosition * 5) * XMMatrixTranslation(0,5,0)));
 
+			//Grunt
+			mcb.color = XMFLOAT4(.8f, 0, 0.5f, 1.0f);
+			mcb.worldMatrix = gruntTorso.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			gruntTorso.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gruntRightSide.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gruntLeftSide.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			//Spartan
+			mcb.worldMatrix = spartan.GetWorldMatrix();
+			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+			myContext->Unmap(meshConstBuff, 0);
+
+			//spartan.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			//No texture
+
 			//Second Mjolnir 
 			data = { 0 };
 			mcb.enableTexture = 0;
@@ -375,7 +492,6 @@ void LetsDrawSomeStuff::Render()
 			lightMatrix._43 = lcb.spotlightPos.z;
 
 			data = { 0 };
-			mcb.enableTexture = 0;
 			mcb.color = XMFLOAT4(0, 1, 1, 1);
 			mcb.worldMatrix = lightMatrix;
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
@@ -388,7 +504,6 @@ void LetsDrawSomeStuff::Render()
 
 			//Blaster 
 			data = { 0 };
-			mcb.enableTexture = 0;
 			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1);
 			mcb.worldMatrix = blaster.GetWorldMatrix();
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
@@ -400,7 +515,7 @@ void LetsDrawSomeStuff::Render()
 			blaster.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			//Livingroom
-			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0);
 			mcb.worldMatrix = livingroom.GetWorldMatrix();
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
@@ -419,7 +534,64 @@ void LetsDrawSomeStuff::Render()
 
 			grid.TestGrid(myContext, gridVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
+			//Transparent objects
 
+			float blendFactor[4] = { 0.75f, 0.75f, 0.75f, 1.0f };
+			UINT sampleMask = 0xffffffff;
+			myContext->OMSetBlendState(blendState, blendFactor, sampleMask);
+
+			//Distance check 
+			
+
+			std::vector<Mesh*> transparentObjects;
+			transparentObjects.push_back(&transparentRedCube);
+			transparentObjects.push_back(&transparentGreenCube);
+			transparentObjects.push_back(&transparentBlueCube);
+
+			std::map<float, int> depthList;
+
+			XMVECTOR cameraPos;
+			XMVECTOR cameraRot;
+			XMVECTOR cameraScale;
+
+			XMMatrixDecompose(&cameraScale, &cameraRot, &cameraPos, MatrixRegister(mainCamera.mViewMatrix));
+
+			for(int i = 0; i < transparentObjects.size(); i++)
+			{
+				XMVECTOR cubePos;
+
+				XMMatrixDecompose(&cameraScale, &cameraRot, &cubePos, MatrixRegister(transparentObjects[i]->GetWorldMatrix()));
+
+				float distX = XMVectorGetX(cubePos) - XMVectorGetX(cameraPos);
+				float distY = XMVectorGetY(cubePos) - XMVectorGetY(cameraPos);
+				float distZ = XMVectorGetZ(cubePos) - XMVectorGetZ(cameraPos);
+
+
+				float totalDist = sqrtf(distX * distX + distY * distY + distZ * distZ);
+
+				depthList.insert({ totalDist, i });
+			}
+
+			std::map<float, int>::reverse_iterator it = depthList.rbegin();
+
+			for(it; it != depthList.rend(); it++)
+			{
+				Mesh* currObject = transparentObjects[it->second];
+				mcb.color = currObject->baseColor;
+				mcb.worldMatrix = currObject->GetWorldMatrix();
+				myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+				memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
+				myContext->Unmap(meshConstBuff, 0);
+
+				//Draw back side 
+				myContext->RSSetState(CCWcullingMode);
+				currObject->RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+				//Draw front side
+				myContext->RSSetState(CWcullingMode);
+				currObject->RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			}
+			
 			// Skybox
 			data = { 0 };
 			mcb.enableTexture = 0;
@@ -448,6 +620,8 @@ void LetsDrawSomeStuff::Render()
 void LetsDrawSomeStuff::ManageUserInput()
 {
 	float delta = (float)timer.Delta();
+	float movementSpeed = 10;
+	float rotationSpeed = 2;
 	
 	if(GetAsyncKeyState('I') & 0x1)
 	{
@@ -457,7 +631,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 	//Camera Movement
 	if(GetAsyncKeyState('W'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * 5) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage( XMMatrixTranslation(0.0f, 0.0f, delta * movementSpeed) * MatrixRegister(mainCamera.mViewMatrix));
 
 		XMVECTOR camPos = XMVectorZero();
 		XMVECTOR camRot = XMVectorZero();
@@ -471,7 +645,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState('A'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * 5, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(-delta * movementSpeed, 0.0f, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 	
 		XMVECTOR camPos = XMVectorZero();
 		XMVECTOR camRot = XMVectorZero();
@@ -485,7 +659,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState('S'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * 5) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * movementSpeed) * MatrixRegister(mainCamera.mViewMatrix));
 
 		XMVECTOR camPos = XMVectorZero();
 		XMVECTOR camRot = XMVectorZero();
@@ -499,7 +673,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState('D'))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * 5, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(delta * movementSpeed, 0.0f, 0.0f) *  MatrixRegister(mainCamera.mViewMatrix));
 		
 		XMVECTOR camPos = XMVectorZero();
 		XMVECTOR camRot = XMVectorZero();
@@ -513,7 +687,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_SPACE))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, delta * 5, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, delta * movementSpeed, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		
 		XMVECTOR camPos = XMVectorZero();
 		XMVECTOR camRot = XMVectorZero();
@@ -527,7 +701,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_LCONTROL))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, -delta * 5, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixTranslation(0.0f, -delta * movementSpeed, 0.0f) * MatrixRegister(mainCamera.mViewMatrix));
 		
 		XMVECTOR camPos = XMVectorZero();
 		XMVECTOR camRot = XMVectorZero();
@@ -542,7 +716,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_UP))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationX(-delta) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationX(-delta * rotationSpeed) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
@@ -556,7 +730,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 		
 		mainCamera.mViewMatrix._41, mainCamera.mViewMatrix._42, mainCamera.mViewMatrix._43 = 0;
 
-		mainCamera.mViewMatrix = MatrixStorage( MatrixRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(delta) );
+		mainCamera.mViewMatrix = MatrixStorage( MatrixRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(delta * rotationSpeed) );
 
 		XMFLOAT4 hey = VectorStorage(pos);
 
@@ -570,7 +744,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_DOWN))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationX(delta) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationX(delta * rotationSpeed) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
@@ -584,7 +758,7 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 		mainCamera.mViewMatrix._41, mainCamera.mViewMatrix._42, mainCamera.mViewMatrix._43 = 0;
 
-		mainCamera.mViewMatrix = MatrixStorage(MatrixRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(-delta));
+		mainCamera.mViewMatrix = MatrixStorage(MatrixRegister(mainCamera.mViewMatrix) * XMMatrixRotationY(-delta * rotationSpeed));
 
 		XMFLOAT4 hey = VectorStorage(pos);
 
@@ -598,13 +772,13 @@ void LetsDrawSomeStuff::ManageUserInput()
 
 	if(GetAsyncKeyState(VK_LSHIFT))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationZ(delta) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationZ(delta * rotationSpeed) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
 	if(GetAsyncKeyState(VK_RSHIFT))
 	{
-		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationZ(-delta) * MatrixRegister(mainCamera.mViewMatrix));
+		mainCamera.mViewMatrix = MatrixStorage(XMMatrixRotationZ(-delta * rotationSpeed) * MatrixRegister(mainCamera.mViewMatrix));
 		updateCameraBuffer = true;
 	}
 
@@ -638,8 +812,6 @@ void LetsDrawSomeStuff::ManageUserInput()
 		}
 
 	}
-	
-	std::cout << mainCamera.farPlane << std::endl;
 
 	if(GetAsyncKeyState(VK_NUMPAD1))
 	{

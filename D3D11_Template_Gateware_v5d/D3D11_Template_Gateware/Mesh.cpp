@@ -74,7 +74,7 @@ void Mesh::MakePyramid(ID3D11Device* device)
 
 int Mesh::CreateSkybox(ID3D11Device* device, ID3D11DeviceContext* context,const char boxpath[], const wchar_t texturePath[])
 {
-	LoadMeshFromFile(device, boxpath);
+	LoadMeshFromFile(device, boxpath, true);
 
 	LoadTexture(device, texturePath);
 
@@ -142,7 +142,7 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 	device->CreateBuffer(&bufferDesc, &data, &m_pVertexBuffer.p);
 }
 
-int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[])
+int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool flipV)
 {
 	FILE* file = fopen(filename, "r");
 
@@ -179,7 +179,8 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[])
 		{
 			XMFLOAT3 newData;
 			fscanf(file, "%f %f\n", &newData.x, &newData.y);
-			newData.y = 1 - newData.y;
+			if(flipV)
+				newData.y = 1 - newData.y;
 			newData.z = 0;
 			temp_uv.push_back(newData);
 		}
@@ -322,7 +323,6 @@ int Mesh::RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D1
 
 	return 0;
 }
-
 
 void Mesh::SetWorldMatrix(XMFLOAT4X4 SetWorldMatrix)
 {
