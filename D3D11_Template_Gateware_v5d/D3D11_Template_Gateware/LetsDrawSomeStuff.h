@@ -46,6 +46,12 @@ struct CameraConstantBuffer
 	XMFLOAT4X4 projMatrix;
 };
 
+struct InstanceBuffer
+{
+	XMFLOAT4 positions[3];
+	XMFLOAT4 colors[3];
+};
+
 // use normals for light saber (dot product)
 
 class LetsDrawSomeStuff
@@ -69,6 +75,7 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11Buffer> meshConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> lightConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> pixelConstBuff = nullptr;
+	CComPtr<ID3D11Buffer> instanceBuff = nullptr;
 
 	CComPtr<ID3D11BlendState> blendState = nullptr;
 	CComPtr<ID3D11RasterizerState> CCWcullingMode;
@@ -84,12 +91,11 @@ class LetsDrawSomeStuff
 	Mesh transparentRedCube;
 	Mesh transparentBlueCube;
 
-
 	Mesh grid;
 	Mesh hammer;
 	Mesh blaster;
 	Mesh needler;
-	Mesh livingroom;
+	Mesh baseMap;
 	Mesh skybox;
 
 	Camera mainCamera;
@@ -166,16 +172,10 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			skybox.SetWorldMatrix(tempWorldMatrix);
 			skybox.CreateSkybox(myDevice, myContext, "../D3D11_Template_Gateware/Models/SkyboxTest.obj", L"../D3D11_Template_Gateware/Models/OutputCube.dds");
 
-			//Livingroom
-			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() );
-			livingroom.SetWorldMatrix(tempWorldMatrix);
-			livingroom.LoadMeshFromHeader(myDevice, LivingRoom_data, 30224, LivingRoom_indicies, 31140);
-
-			//Blaster
-			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(-5, 5, 0) * XMMatrixScaling(.1f,.1f,.1f));
-			blaster.SetWorldMatrix(tempWorldMatrix);
-			blaster.LoadMeshFromHeader(myDevice, DC_15_Blaster_data, 23471, DC_15_Blaster_indicies, 24375);
-			//blaster.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/DC-15_Blaster.obj");
+			//Base map
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixScaling(.5f,.5f,.5f));
+			baseMap.SetWorldMatrix(tempWorldMatrix);
+			baseMap.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/BaseMap.obj", true);
 
 			//Grunt
 			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() *  XMMatrixRotationY(XMConvertToRadians(90)) * XMMatrixTranslation(5,0,5) );
@@ -217,7 +217,8 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			//Neddler 
 			tempWorldMatrix = MatrixStorage(XMMatrixIdentity());
 			needler.SetWorldMatrix(tempWorldMatrix);
-			
+			needler.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/Needler.obj", true);
+
 			#pragma endregion 
 			
 
@@ -265,7 +266,7 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			#pragma endregion
 
 
-			#pragma region  Constant Buffers
+			#pragma region  Buffers
 
 			D3D11_BUFFER_DESC buffDesc = { 0 };
 			buffDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -281,6 +282,13 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			buffDesc.ByteWidth = sizeof(LightConstantBuffer);
 			myDevice->CreateBuffer(&buffDesc, nullptr, &lightConstBuff.p);
 
+			//Instancing stuff
+			buffDesc = { 0 };
+			buffDesc.Usage = D3D11_USAGE_DYNAMIC;
+			buffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			buffDesc.ByteWidth = sizeof(InstanceBuffer);
+			buffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			
 
 			#pragma endregion
 
@@ -361,6 +369,7 @@ void LetsDrawSomeStuff::Render()
 				myContext->ClearDepthStencilView(myDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0); // clear it to Z exponential Far.
 				myDepthStencilView->Release();
 			}
+
 
 			// Set active target for drawing, all array based D3D11 functions should use a syntax similar to below
 			ID3D11RenderTargetView* const targets[] = { myRenderTargetView };
@@ -515,14 +524,14 @@ void LetsDrawSomeStuff::Render()
 			blaster.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			//Livingroom
-			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 0);
-			mcb.worldMatrix = livingroom.GetWorldMatrix();
+			mcb.color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1);
+			mcb.worldMatrix = baseMap.GetWorldMatrix();
 			myContext->Map(meshConstBuff, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
 			myContext->Unmap(meshConstBuff, 0);
 			
 
-			livingroom.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			baseMap.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
 			//Grid
@@ -537,12 +546,10 @@ void LetsDrawSomeStuff::Render()
 			//Transparent objects
 
 			float blendFactor[4] = { 0.75f, 0.75f, 0.75f, 1.0f };
-			UINT sampleMask = 0xffffffff;
-			myContext->OMSetBlendState(blendState, blendFactor, sampleMask);
+			myContext->OMSetBlendState(blendState, blendFactor, 0xffffffff);
 
 			//Distance check 
-			
-
+		
 			std::vector<Mesh*> transparentObjects;
 			transparentObjects.push_back(&transparentRedCube);
 			transparentObjects.push_back(&transparentGreenCube);
@@ -591,6 +598,8 @@ void LetsDrawSomeStuff::Render()
 				myContext->RSSetState(CWcullingMode);
 				currObject->RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			}
+			myContext->OMSetBlendState(0, 0, 0xffffffff);
+
 			
 			// Skybox
 			data = { 0 };
@@ -615,7 +624,6 @@ void LetsDrawSomeStuff::Render()
 		}
 	}
 }
-
 
 void LetsDrawSomeStuff::ManageUserInput()
 {
@@ -711,6 +719,65 @@ void LetsDrawSomeStuff::ManageUserInput()
 		skybox.SetWorldMatrix(MatrixStorage(XMMatrixScaling(10, 10, 10) * XMMatrixTranslationFromVector(camPos)));
 		updateCameraBuffer = true;
 	}
+	
+	XMVECTOR objPos;
+	XMVECTOR objRot;
+	XMVECTOR objScale;
+
+	 
+
+	XMMatrixDecompose(&objScale, &objRot, &objPos, MatrixRegister(gruntTorso.GetWorldMatrix()));
+
+	std::cout << XMVectorGetX(objPos) << " " << XMVectorGetY(objPos) << " " << XMVectorGetZ(objPos) << std::endl;
+
+
+	//Temp obj Movement
+	if(GetAsyncKeyState('Y'))
+	{
+		gruntTorso.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, delta * movementSpeed) *		MatrixRegister(gruntTorso.GetWorldMatrix())));
+		gruntLeftSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, delta * movementSpeed) *		MatrixRegister(gruntLeftSide.GetWorldMatrix())));
+		gruntRightSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, delta * movementSpeed) *	MatrixRegister(gruntRightSide.GetWorldMatrix())));
+	}
+	if(GetAsyncKeyState('G'))
+	{
+		gruntTorso.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(-delta * movementSpeed, 0.0f, 0.0f) *		MatrixRegister(gruntTorso.GetWorldMatrix())));
+		gruntLeftSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(-delta * movementSpeed, 0.0f, 0.0f) *	MatrixRegister(gruntLeftSide.GetWorldMatrix())));
+		gruntRightSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(-delta * movementSpeed, 0.0f, 0.0f) *	MatrixRegister(gruntRightSide.GetWorldMatrix())));
+	}
+
+	if(GetAsyncKeyState('H'))
+	{
+		gruntTorso.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * movementSpeed) *		MatrixRegister(gruntTorso.GetWorldMatrix())));
+		gruntLeftSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * movementSpeed) *	MatrixRegister(gruntLeftSide.GetWorldMatrix())));
+		gruntRightSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, 0.0f, -delta * movementSpeed) *	MatrixRegister(gruntRightSide.GetWorldMatrix())));
+	}
+
+	if(GetAsyncKeyState('J'))
+	{
+		gruntTorso.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(delta * movementSpeed, 0.0f, 0.0f) *		MatrixRegister(gruntTorso.GetWorldMatrix())));
+		gruntLeftSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(delta * movementSpeed, 0.0f, 0.0f) *		MatrixRegister(gruntLeftSide.GetWorldMatrix())));
+		gruntRightSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(delta * movementSpeed, 0.0f, 0.0f) *	MatrixRegister(gruntRightSide.GetWorldMatrix())));
+	}
+
+	if(GetAsyncKeyState('N'))
+	{
+		gruntTorso.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, delta * movementSpeed, 0.0f) *		MatrixRegister(gruntTorso.GetWorldMatrix())));
+		gruntLeftSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, delta * movementSpeed, 0.0f) *		MatrixRegister(gruntLeftSide.GetWorldMatrix())));
+		gruntRightSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, delta * movementSpeed, 0.0f) *	MatrixRegister(gruntRightSide.GetWorldMatrix())));
+	}
+
+
+	if(GetAsyncKeyState('M'))
+	{
+		gruntTorso.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, -delta * movementSpeed, 0.0f) *		MatrixRegister(gruntTorso.GetWorldMatrix())));
+		gruntLeftSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, -delta * movementSpeed, 0.0f) *	MatrixRegister(gruntLeftSide.GetWorldMatrix())));
+		gruntRightSide.SetWorldMatrix(MatrixStorage(XMMatrixTranslation(0.0f, -delta * movementSpeed, 0.0f) *	MatrixRegister(gruntRightSide.GetWorldMatrix())));
+	}
+
+
+
+
+
 
 	//Camera Rotation
 

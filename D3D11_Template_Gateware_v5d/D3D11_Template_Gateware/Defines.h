@@ -5,7 +5,6 @@
 #include <atlcomcli.h>
 #include "../D3D11_Template_Gateware/Models/ThorHammer.h" 
 #include "../D3D11_Template_Gateware/Models/LivingRoom.h"
-#include "../D3D11_Template_Gateware/Models/DC-15_Blaster.h"
 
 using namespace DirectX;
 

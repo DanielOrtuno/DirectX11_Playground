@@ -12,7 +12,7 @@ Camera::Camera()
 void Camera::InitializeCamera(float aspectRatio)
 {
 	
-	mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(0,1,-2));
+	mViewMatrix = MatrixStorage(XMMatrixIdentity() * XMMatrixTranslation(10,1, -40));
 	mProjMatrix = MatrixStorage(XMMatrixPerspectiveFovLH(XMConvertToRadians(FOV), aspectRatio, nearPlane, farPlane));
 
 	//mPos = XMFLOAT4(0, 0, -1,0);

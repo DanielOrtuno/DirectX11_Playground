@@ -1,0 +1,42 @@
+newmtl FPSjotgun:shotgun_gun
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl FPSjotgun:shotgun_primary
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl ODST:_2___Default
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd odst_body_diffuse.png
+bump odst_body_zbump.png -bm 0
+Ni 1.50
+Ks 0.90 0.90 0.90
+Ns 10.08
+newmtl ODST:_3___Default
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd odst_helmet_diffuse.png
+bump odst_helmet_zbump.png -bm 0
+Ni 1.50
+Ks 0.90 0.90 0.90
+Ns 10.08
+newmtl initialShadingGroup
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
