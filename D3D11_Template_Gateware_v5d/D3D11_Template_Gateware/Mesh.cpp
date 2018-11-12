@@ -7,10 +7,12 @@ Mesh::Mesh()
 	m_pVertices = nullptr;
 	m_pIndices = nullptr;
 	m_pDiffuseMap.p = nullptr;
+	m_pInstanceBuffer.p = nullptr;
 	m_pSamplerState.p = nullptr;
 
-	mNumVertices = 0;
-	mNumIndices = 0;
+	m_NumVertices = 0;
+	m_NumIndices = 0;
+	m_NumInstances = 0;
 }
 
 void Mesh::CreateBuffers(ID3D11Device* device)
@@ -19,7 +21,7 @@ void Mesh::CreateBuffers(ID3D11Device* device)
 	D3D11_BUFFER_DESC bufferDesc = { 0 };
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.ByteWidth = sizeof(VERTEX) * mNumVertices;
+	bufferDesc.ByteWidth = sizeof(VERTEX) * m_NumVertices;
 	bufferDesc.CPUAccessFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA data = { 0 };
@@ -28,19 +30,29 @@ void Mesh::CreateBuffers(ID3D11Device* device)
 	device->CreateBuffer(&bufferDesc, &data, &m_pVertexBuffer.p);
 
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bufferDesc.ByteWidth = sizeof(int) * mNumIndices;
+	bufferDesc.ByteWidth = sizeof(int) * m_NumIndices;
 
 	data.pSysMem = m_pIndices;
 
 	device->CreateBuffer(&bufferDesc, &data, &m_pIndexBuffer.p);
+
+	if(m_NumInstances > 0)
+	{
+		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		bufferDesc.ByteWidth = sizeof(InstanceType) * m_NumInstances;
+
+		data.pSysMem = m_pInstanceData;
+
+		device->CreateBuffer(&bufferDesc, &data, &m_pInstanceBuffer.p);
+	}
 }
 
 
 void Mesh::MakePyramid(ID3D11Device* device)
 {
 	// Load data into arrays
-	mNumVertices = 4;
-	m_pVertices = new VERTEX[mNumVertices];
+	m_NumVertices = 4;
+	m_pVertices = new VERTEX[m_NumVertices];
 
 	m_pVertices[0] = { XMFLOAT4(0.0f, 0.5f, 0.25f, 1.0f),	XMFLOAT3(1,0,0) };
 	m_pVertices[1] = { XMFLOAT4(0.25f, -0.5f, 0.0f, 1.0f),	XMFLOAT3(1,0,0) };
@@ -48,8 +60,8 @@ void Mesh::MakePyramid(ID3D11Device* device)
 	m_pVertices[3] = { XMFLOAT4(0.25f, -0.5f, 0.5f, 1.0f),	XMFLOAT3(1,0,0) };
 
 
-	mNumIndices = 12;
-	m_pIndices = new int[mNumIndices];
+	m_NumIndices = 12;
+	m_pIndices = new int[m_NumIndices];
 
 	m_pIndices[0] = 0;	//Front face
 	m_pIndices[1] = 1;
@@ -121,10 +133,10 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 
 	}
 
-	mNumVertices = list.size();
-	m_pVertices = new VERTEX[mNumVertices];
+	m_NumVertices = list.size();
+	m_pVertices = new VERTEX[m_NumVertices];
 
-	for(int i = 0; i < mNumVertices; i++)
+	for(int i = 0; i < m_NumVertices; i++)
 	{
 		m_pVertices[i] = list[i];
 	}
@@ -133,7 +145,7 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 	D3D11_BUFFER_DESC bufferDesc = { 0 };
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.ByteWidth = sizeof(VERTEX) * mNumVertices;
+	bufferDesc.ByteWidth = sizeof(VERTEX) * m_NumVertices;
 	bufferDesc.CPUAccessFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA data = { 0 };
@@ -240,10 +252,10 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool fli
 
 	//Put everything in the arrays 
 
-	mNumVertices = umap.size();
-	m_pVertices = new VERTEX[mNumVertices];
+	m_NumVertices = umap.size();
+	m_pVertices = new VERTEX[m_NumVertices];
 
-	for(int i = 0; i < mNumVertices; i++)
+	for(int i = 0; i < m_NumVertices; i++)
 	{
 		auto it = std::find_if(umap.begin(), umap.end(), [&i](const std::pair<VERTEX, int> &p)
 		{
@@ -253,11 +265,11 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool fli
 		m_pVertices[i] = it->first;
 	}
 
-	mNumIndices = finalIndexList.size();
+	m_NumIndices = finalIndexList.size();
 
-	m_pIndices = new int[mNumIndices];
+	m_pIndices = new int[m_NumIndices];
 	
-	for(int i = 0; i < mNumIndices; i++)
+	for(int i = 0; i < m_NumIndices; i++)
 	{
 		m_pIndices[i] = finalIndexList[i];
 	}
@@ -270,21 +282,21 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool fli
 
 void Mesh::LoadMeshFromHeader(ID3D11Device* device, const _OBJ_VERT_* vertArray, int vertexCount, const unsigned int* indexArray, int indexCount)
 {
-	mNumVertices = vertexCount ;
-	mNumIndices = indexCount;
+	m_NumVertices = vertexCount ;
+	m_NumIndices = indexCount;
 
-	m_pVertices = new VERTEX[mNumVertices];
+	m_pVertices = new VERTEX[m_NumVertices];
 
-	for(int i = 0; i < mNumVertices; i++)
+	for(int i = 0; i < m_NumVertices; i++)
 	{
 		m_pVertices[i].pos = XMFLOAT4{ vertArray[i].pos[0], vertArray[i].pos[1], vertArray[i].pos[2], 1.0f };
 		m_pVertices[i].uv = XMFLOAT3{ vertArray[i].uvw[0], vertArray[i].uvw[1], vertArray[i].uvw[2]};
 		m_pVertices[i].normal = XMFLOAT3{ vertArray[i].nrm[0], vertArray[i].nrm[1], vertArray[i].nrm[2]};
 	}
 
-	m_pIndices = new int[mNumIndices];
+	m_pIndices = new int[m_NumIndices];
 
-	for(int i = 0; i < mNumIndices; i++)
+	for(int i = 0; i < m_NumIndices; i++)
 	{
 		m_pIndices[i] = indexArray[i];
 	}
@@ -319,15 +331,65 @@ int Mesh::RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D1
 	context->VSSetShader(VS, nullptr, 0);
 	context->PSSetShader(PS, nullptr, 0);
 
-	context->DrawIndexed(mNumIndices, 0, 0);
+	context->DrawIndexed(m_NumIndices, 0, 0);
 
 	return 0;
 }
+
+int Mesh::RenderInstancesOfMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology)
+{
+	if(m_pSRV.p != nullptr)
+		context->PSSetShaderResources(0, 1, &m_pSRV.p);
+
+	if(m_pSamplerState.p != nullptr)
+		context->PSSetSamplers(0, 1, &m_pSamplerState.p);
+
+	context->IASetPrimitiveTopology(topology);
+
+	context->IASetInputLayout(inputLayout);
+
+	UINT strides[2];
+	strides[0] = sizeof(VERTEX);
+	strides[1] = sizeof(InstanceType);
+
+	UINT offsets[2];
+	offsets[0] = 0;
+	offsets[1] = 0;
+
+	ID3D11Buffer* bufferPointers[2];
+	bufferPointers[0] = m_pVertexBuffer.p;
+	bufferPointers[1] = m_pInstanceBuffer.p;
+
+	context->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+	
+	context->IASetIndexBuffer(m_pIndexBuffer.p, DXGI_FORMAT_R32_UINT, 0);
+
+	context->VSSetShader(VS, nullptr, 0);
+	context->PSSetShader(PS, nullptr, 0);
+
+	context->DrawIndexedInstanced(m_NumIndices, m_NumInstances, 0, 0, 0);
+
+	return 0;
+}
+
 
 void Mesh::SetWorldMatrix(XMFLOAT4X4 SetWorldMatrix)
 {
 	mWorldMatrix = SetWorldMatrix;
 }
+
+void Mesh::SetInstancingData(int _NumInstances, InstanceType _instanceData[])
+{
+	m_NumInstances = _NumInstances;
+
+	m_pInstanceData = new InstanceType[m_NumInstances];
+
+	for(int i = 0; i < m_NumInstances; i++)
+	{
+		m_pInstanceData[i] = _instanceData[i];
+	}
+}
+
 
 XMFLOAT4X4 Mesh::GetWorldMatrix()
 {

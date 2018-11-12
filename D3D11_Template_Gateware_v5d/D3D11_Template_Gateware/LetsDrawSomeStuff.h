@@ -13,6 +13,7 @@
 #include "GridVertexShader.csh"
 #include "SkyboxVS.csh"
 #include "SkyboxPS.csh"
+#include "InstanceVS.csh"
 
 // Simple Container class to make life easier/cleaner
 using namespace DirectX;
@@ -46,11 +47,6 @@ struct CameraConstantBuffer
 	XMFLOAT4X4 projMatrix;
 };
 
-struct InstanceBuffer
-{
-	XMFLOAT4 positions[3];
-	XMFLOAT4 colors[3];
-};
 
 // use normals for light saber (dot product)
 
@@ -67,15 +63,16 @@ class LetsDrawSomeStuff
 	CComPtr<ID3D11PixelShader> basicPS = nullptr;
 	CComPtr<ID3D11VertexShader> basicVS = nullptr;
 	CComPtr<ID3D11VertexShader> gridVS = nullptr;
+	CComPtr<ID3D11VertexShader> instanceVS = nullptr;
 	CComPtr<ID3D11VertexShader> skyboxVS = nullptr;
 	CComPtr<ID3D11PixelShader> skyboxPS = nullptr;
 	CComPtr<ID3D11InputLayout> inputLayout = nullptr;
+	CComPtr<ID3D11InputLayout> instInputLayout = nullptr;
 
 	CComPtr<ID3D11Buffer> cameraConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> meshConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> lightConstBuff = nullptr;
 	CComPtr<ID3D11Buffer> pixelConstBuff = nullptr;
-	CComPtr<ID3D11Buffer> instanceBuff = nullptr;
 
 	CComPtr<ID3D11BlendState> blendState = nullptr;
 	CComPtr<ID3D11RasterizerState> CCWcullingMode;
@@ -178,8 +175,22 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			baseMap.LoadMeshFromFile(myDevice, "../D3D11_Template_Gateware/Models/BaseMap.obj", true);
 
 			//Grunt
-			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() *  XMMatrixRotationY(XMConvertToRadians(90)) * XMMatrixTranslation(5,0,5) );
+			tempWorldMatrix = MatrixStorage(XMMatrixIdentity() );
 			gruntTorso.SetWorldMatrix(tempWorldMatrix);
+
+			InstanceType instData[3];
+			int numbersPicked[3] = { -1 };
+
+			instData[0].posAndRot = XMFLOAT4(18.8939f, -23.3933f, -13.5918f, rand() * 360);
+			instData[1].posAndRot = XMFLOAT4(-24.2221f, 5.42948f, -22.0524f, rand() * 360);
+			instData[2].posAndRot = XMFLOAT4(-34.9067f, -23.3924f, -30.3552f, rand() * 360);
+
+
+			gruntTorso.SetInstancingData(3, instData);
+			gruntRightSide.SetInstancingData(3, instData);
+			gruntLeftSide.SetInstancingData(3, instData);
+
+
 			gruntRightSide.SetWorldMatrix(tempWorldMatrix);
 			gruntLeftSide.SetWorldMatrix(tempWorldMatrix);
 
@@ -244,10 +255,12 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 			#pragma region Shaders
 
 			myDevice->CreateVertexShader(BasicVertexShader, sizeof(BasicVertexShader), nullptr, &basicVS.p);
-			myDevice->CreatePixelShader(BasicPixelShader, sizeof(BasicPixelShader), nullptr, &basicPS.p);
 			myDevice->CreateVertexShader(GridVertexShader, sizeof(GridVertexShader), nullptr, &gridVS.p);
 			myDevice->CreateVertexShader(SkyboxVS, sizeof(SkyboxVS), nullptr, &skyboxVS.p);
+			myDevice->CreateVertexShader(InstanceVS, sizeof(InstanceVS), nullptr, &instanceVS.p);
+
 			myDevice->CreatePixelShader(SkyboxPS, sizeof(SkyboxPS), nullptr, &skyboxPS.p);
+			myDevice->CreatePixelShader(BasicPixelShader, sizeof(BasicPixelShader), nullptr, &basicPS.p);
 
 			#pragma endregion
 
@@ -263,6 +276,16 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			myDevice->CreateInputLayout(layout, 3, BasicVertexShader, sizeof(BasicVertexShader), &inputLayout.p);
 
+			D3D11_INPUT_ELEMENT_DESC instLayout[]
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXTURECOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+				{ "INSTANCEPOS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+			};
+
+			myDevice->CreateInputLayout(instLayout, 4, InstanceVS, sizeof(InstanceVS), &instInputLayout.p);
 			#pragma endregion
 
 
@@ -281,14 +304,6 @@ LetsDrawSomeStuff::LetsDrawSomeStuff(GW::SYSTEM::GWindow* attatchPoint)
 
 			buffDesc.ByteWidth = sizeof(LightConstantBuffer);
 			myDevice->CreateBuffer(&buffDesc, nullptr, &lightConstBuff.p);
-
-			//Instancing stuff
-			buffDesc = { 0 };
-			buffDesc.Usage = D3D11_USAGE_DYNAMIC;
-			buffDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-			buffDesc.ByteWidth = sizeof(InstanceBuffer);
-			buffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-			
 
 			#pragma endregion
 
@@ -466,9 +481,9 @@ void LetsDrawSomeStuff::Render()
 			memcpy_s(data.pData, sizeof(mcb), &mcb, sizeof(mcb));
 			myContext->Unmap(meshConstBuff, 0);
 
-			gruntTorso.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			gruntRightSide.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			gruntLeftSide.RenderMesh(myContext, basicVS.p, basicPS.p, inputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gruntTorso.RenderInstancesOfMesh(myContext, instanceVS.p, basicPS.p, instInputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gruntRightSide.RenderInstancesOfMesh(myContext, instanceVS.p, basicPS.p, instInputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			gruntLeftSide.RenderInstancesOfMesh(myContext, instanceVS.p, basicPS.p, instInputLayout.p, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			//Spartan
 			mcb.worldMatrix = spartan.GetWorldMatrix();

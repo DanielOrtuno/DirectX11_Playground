@@ -45,6 +45,11 @@ struct hashFct_VERTEX
 	}
 };
 
+struct InstanceType
+{
+	XMFLOAT4 posAndRot; //w component is the y rotation
+};
+
 class Mesh
 {
 private:
@@ -52,15 +57,18 @@ private:
 	XMFLOAT4X4							mWorldMatrix;
 	CComPtr<ID3D11Buffer>				m_pVertexBuffer;
 	CComPtr<ID3D11Buffer>				m_pIndexBuffer;
+	CComPtr<ID3D11Buffer>				m_pInstanceBuffer;
 	CComPtr<ID3D11Texture2D>			m_pDiffuseMap;
 	CComPtr<ID3D11ShaderResourceView>	m_pSRV;
 
 
 	VERTEX*								m_pVertices;
+	InstanceType*						m_pInstanceData;
 	int*								m_pIndices;
 
-	int		/*This is an integer */		mNumVertices;
-	int									mNumIndices;
+	int		/*This is an integer */		m_NumVertices;
+	int									m_NumIndices;
+	int									m_NumInstances;
 
 
 	void CreateBuffers(ID3D11Device* device);
@@ -88,10 +96,13 @@ public:
 
 	int RenderMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology);
 
+	int RenderInstancesOfMesh(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology);
+
 	XMFLOAT4X4 GetWorldMatrix();
 
 	void SetWorldMatrix(XMFLOAT4X4 newMatrix);
 
+	void SetInstancingData(int _NumInstances, InstanceType _instanceData[]);
 
 	void TestGrid(ID3D11DeviceContext* context, ID3D11VertexShader* VS, ID3D11PixelShader* PS, ID3D11InputLayout* inputLayout, D3D11_PRIMITIVE_TOPOLOGY topology)
 	{
@@ -108,7 +119,7 @@ public:
 		context->VSSetShader(VS, nullptr, 0);
 		context->PSSetShader(PS, nullptr, 0);
 
-		context->Draw(mNumVertices, 0);
+		context->Draw(m_NumVertices, 0);
 	}
 
 
