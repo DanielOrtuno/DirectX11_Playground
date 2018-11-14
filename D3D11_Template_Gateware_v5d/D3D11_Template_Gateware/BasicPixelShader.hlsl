@@ -41,7 +41,7 @@ float4 main(OUTPUT input) : SV_TARGET
 	{
 		lightRatio = clamp(dot(-normalize(lightDirection[i].xyz), input.normal), 0, 1);
 
-		lightRatio = clamp(lightRatio + .15f, 0, 1);
+		lightRatio = clamp(lightRatio + .50f, 0, 1);
 		finalColor += lightRatio * lightColor[i] * val;
 	}
 
@@ -50,7 +50,7 @@ float4 main(OUTPUT input) : SV_TARGET
 	float4 toLight = pointlightPos - input.worldPos;
 	float3 lightLength = length(toLight);
 
-	float rangeAttenuation = 1 - clamp(lightLength / 5.0f, 0, 1);
+	float rangeAttenuation = 1 - clamp(lightLength / 7.0f, 0, 1);
 
 	float angularAttenuation = clamp(dot(toLight/lightLength, input.normal), 0, 1);
 

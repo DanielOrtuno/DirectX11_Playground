@@ -37,7 +37,7 @@ OUTPUT main(VERTEX input)
 	output.pos = input.pos;
 	output.pos = mul(output.pos, worldMatrix);
 	output.pos = mul(output.pos, viewMatrix);
-	output.pos = mul(output.pos, projMatrix);
+	output.pos = mul(output.pos, projMatrix).xyww;
 
 	output.color = input.pos;
 

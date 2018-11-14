@@ -10,5 +10,7 @@ struct OUTPUT
 
 float4 main(OUTPUT input) : SV_TARGET
 {
+
 	return diffuseMap.Sample(filter, input.color.xyz);
 }
+

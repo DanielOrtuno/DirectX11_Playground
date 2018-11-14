@@ -1,0 +1,30 @@
+newmtl Banshee:_01___Default
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd banshee.png
+map_Ka banshee.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Banshee:_02___Default
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd blown_open_banshee.png
+map_Ka blown_open_banshee.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Banshee:_03___Default
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd torn_up_banshee.png
+map_Ka torn_up_banshee.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00

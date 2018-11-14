@@ -154,7 +154,7 @@ void Mesh::InitializeAs3DGrid(ID3D11Device* device)
 	device->CreateBuffer(&bufferDesc, &data, &m_pVertexBuffer.p);
 }
 
-int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool flipV)
+int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool tileTexture)
 {
 	FILE* file = fopen(filename, "r");
 
@@ -191,8 +191,7 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool fli
 		{
 			XMFLOAT3 newData;
 			fscanf(file, "%f %f\n", &newData.x, &newData.y);
-			if(flipV)
-				newData.y = 1 - newData.y;
+			newData.y = 1 - newData.y;
 			newData.z = 0;
 			temp_uv.push_back(newData);
 		}
@@ -273,7 +272,8 @@ int Mesh::LoadMeshFromFile(ID3D11Device* device, const char filename[], bool fli
 	{
 		m_pIndices[i] = finalIndexList[i];
 	}
-
+	if(tileTexture)
+		BreakUV(10);
 
 	CreateBuffers(device);
 
@@ -389,6 +389,7 @@ void Mesh::SetInstancingData(int _NumInstances, InstanceType _instanceData[])
 		m_pInstanceData[i] = _instanceData[i];
 	}
 }
+
 
 
 XMFLOAT4X4 Mesh::GetWorldMatrix()

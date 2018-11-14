@@ -48,13 +48,13 @@ struct hashFct_VERTEX
 struct InstanceType
 {
 	XMFLOAT4 posAndRot; //w component is the y rotation
+	XMFLOAT4 tintColor;
 };
 
 class Mesh
 {
 private:
 	
-	XMFLOAT4X4							mWorldMatrix;
 	CComPtr<ID3D11Buffer>				m_pVertexBuffer;
 	CComPtr<ID3D11Buffer>				m_pIndexBuffer;
 	CComPtr<ID3D11Buffer>				m_pInstanceBuffer;
@@ -74,7 +74,10 @@ private:
 	void CreateBuffers(ID3D11Device* device);
 
 public:
+	CComPtr<ID3D11RenderTargetView>		m_pRenderTargetView;
+
 	XMFLOAT4 baseColor;
+	XMFLOAT4X4							mWorldMatrix;
 
 	
 	CComPtr<ID3D11SamplerState>			m_pSamplerState;
@@ -122,7 +125,52 @@ public:
 		context->Draw(m_NumVertices, 0);
 	}
 
+	void BreakUV(float mul)
+	{
+		for(int i = 0; i < m_NumVertices; i++)
+		{
+			m_pVertices[i].uv.x *= mul;
+			m_pVertices[i].uv.y *= mul;
+		}
 
+	}
+
+	void CreateTextureManually(ID3D11Device* myDevice)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc;
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+		textureDesc.Width = 1008;
+		textureDesc.Height = 729;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+
+		// Create the texture
+		myDevice->CreateTexture2D(&textureDesc, nullptr, &m_pDiffuseMap.p);
+
+		rtvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+
+		myDevice->CreateRenderTargetView(m_pDiffuseMap, &rtvDesc, &m_pRenderTargetView.p);
+
+		srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+
+		myDevice->CreateShaderResourceView(m_pDiffuseMap, &srvDesc, &m_pSRV.p);
+
+	}
 	~Mesh();
 };
 

@@ -1,6 +1,8 @@
 ﻿  main.cpp
-c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(193): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(194): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(195): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(590): warning C4018: '<': signed/unsigned mismatch
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(263): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(508): warning C4244: '=': conversion from 'UINT' to 'FLOAT', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(509): warning C4244: '=': conversion from 'UINT' to 'FLOAT', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(513): warning C4244: 'argument': conversion from 'UINT' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(876): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\school\graphicsii_project\d3d11_template_gateware_v5d\d3d11_template_gateware\letsdrawsomestuff.h(1269): warning C4305: 'argument': truncation from 'double' to 'float'
   D3D11_Template_Gateware.vcxproj -> C:\School\GraphicsII_Project\D3D11_Template_Gateware_v5d\Debug\D3D11_Template_Gateware.exe
