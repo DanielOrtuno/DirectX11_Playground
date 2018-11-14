@@ -18,13 +18,14 @@ NUMPAD 3/ NUMPAD 6 = Far clip controls
 
 //MILESTONE III
 
-Keyboard numbers 1 to 5 = choose mesh 
+Keyboard numbers 1 to 6 = choose mesh 
 			{
 			pelican
 			banshee (currently disabled because it takes a long time to load. If you want to test it, there's a macro in LetsDrawStuff to enable it)
 			odst
 			spartan
 			grunts (they all move together)
+			Sparks (He's in a different viewport so you might loose it)
 			}
 
 Y/G/H/J = Move selected mesh forward/left/backward/right
